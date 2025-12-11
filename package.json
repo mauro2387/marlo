@@ -1,0 +1,33 @@
+{
+  "name": "marlocookies-root",
+  "version": "1.0.0",
+  "private": true,
+  "description": "MarLo Cookies - Sistema completo de e-commerce y CRM",
+  "scripts": {
+    "install:all": "npm install --prefix backend && npm install --prefix frontend",
+    "dev:backend": "npm run start:dev --prefix backend",
+    "dev:frontend": "npm run dev --prefix frontend",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "build:backend": "npm run build --prefix backend",
+    "build:frontend": "npm run build --prefix frontend",
+    "build": "npm run build:backend && npm run build:frontend",
+    "lint:backend": "npm run lint --prefix backend",
+    "lint:frontend": "npm run lint --prefix frontend",
+    "lint": "npm run lint:backend && npm run lint:frontend",
+    "test:backend": "npm run test --prefix backend",
+    "test:frontend": "npm run test --prefix frontend",
+    "test": "npm run test:backend && npm run test:frontend"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
+}
