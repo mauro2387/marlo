@@ -1,0 +1,60 @@
+import type { Metadata } from 'next';
+import { Nunito, Pacifico } from 'next/font/google';
+import './globals.css';
+import MiniCart from '@/components/MiniCart';
+import NotificationContainer from '@/components/NotificationContainer';
+import ActiveOrderBanner from '@/components/ActiveOrderBanner';
+import { AuthProvider } from '@/components/AuthProvider';
+import MetaPixel from '@/components/MetaPixel';
+
+const nunito = Nunito({
+  subsets: ['latin'],
+  variable: '--font-nunito',
+  display: 'swap',
+});
+
+const pacifico = Pacifico({
+  weight: '400',
+  subsets: ['latin'],
+  variable: '--font-pacifico',
+  display: 'swap',
+});
+
+export const metadata: Metadata = {
+  title: 'MarLo Cookies - Las mejores cookies artesanales de Uruguay',
+  description:
+    'Disfruta de las cookies más deliciosas y artesanales de Maldonado. Cookies clásicas, especiales, box personalizados y más. Sistema de puntos y envío a domicilio.',
+  keywords:
+    'cookies, cookies artesanales, postres, box de cookies, MarLo Cookies, Uruguay, Maldonado',
+};
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="es" className={`${nunito.variable} ${pacifico.variable}`} suppressHydrationWarning>
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+        <link
+          href="https://fonts.googleapis.com/icon?family=Material+Icons"
+          rel="stylesheet"
+        />
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=shopping_bag"
+        />
+      </head>
+      <body className={nunito.className} suppressHydrationWarning>
+        <MetaPixel />
+        <AuthProvider>
+          {children}
+          <MiniCart />
+          <NotificationContainer />
+          <ActiveOrderBanner />
+        </AuthProvider>
+      </body>
+    </html>
+  );
+}
