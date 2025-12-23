@@ -10,7 +10,7 @@ import PromoBannerCarousel from '@/components/PromoBannerCarousel';
 import ScrollAnimation from '@/components/ScrollAnimation';
 import { useEffect, useState } from 'react';
 import { productsService } from '@/services/supabase-api';
-import { floatingImagesDB, subscribersDB, featuredCardsDB } from '@/lib/supabase-fetch';
+import { floatingImagesDB, subscribersDB, featuredCardsDB, popupsDB } from '@/lib/supabase-fetch';
 import { notificationService } from '@/lib/notifications';
 import { isOpenNow, BUSINESS_HOURS } from '@/config/constants';
 import type { Product } from '@/types';
@@ -83,6 +83,8 @@ export default function Home() {
   const [newsletterLoading, setNewsletterLoading] = useState(false);
   const [newsletterSuccess, setNewsletterSuccess] = useState(false);
   const [newsletterError, setNewsletterError] = useState('');
+  const [newsletterCoupon, setNewsletterCoupon] = useState<any>(null);
+  const [copiedNewsletterCoupon, setCopiedNewsletterCoupon] = useState(false);
   
   const handleNewsletterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -97,6 +99,17 @@ export default function Home() {
         email: newsletterEmail
       });
       
+      // Generar cupón (buscar popup de tipo newsletter activo)
+      const { data: popups } = await popupsDB.getActive('home');
+      const newsletterPopup = popups?.find((p: any) => p.plantilla === 'newsletter' && p.generar_cupon);
+      
+      if (newsletterPopup) {
+        const { data: couponData } = await popupsDB.generateCoupon(newsletterPopup.id, newsletterEmail);
+        if (couponData && couponData.success) {
+          setNewsletterCoupon(couponData);
+        }
+      }
+      
       // Enviar email de bienvenida
       await notificationService.notifyNewsletterSubscription({
         email: newsletterEmail,
@@ -107,11 +120,23 @@ export default function Home() {
       
       setNewsletterSuccess(true);
       setNewsletterEmail('');
-      setTimeout(() => setNewsletterSuccess(false), 5000);
+      
+      // No resetear automáticamente si hay cupón
+      if (!newsletterPopup) {
+        setTimeout(() => setNewsletterSuccess(false), 5000);
+      }
     } catch (err) {
       setNewsletterError('Error al suscribirse. Intenta de nuevo.');
     } finally {
       setNewsletterLoading(false);
+    }
+  };
+
+  const handleCopyNewsletterCoupon = () => {
+    if (newsletterCoupon?.coupon_code) {
+      navigator.clipboard.writeText(newsletterCoupon.coupon_code);
+      setCopiedNewsletterCoupon(true);
+      setTimeout(() => setCopiedNewsletterCoupon(false), 2000);
     }
   };
 
@@ -817,8 +842,51 @@ export default function Home() {
             {newsletterSuccess ? (
               <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 sm:p-6 max-w-lg mx-auto">
                 <span className="material-icons text-3xl sm:text-4xl text-green-300 mb-2 block">check_circle</span>
-                <p className="text-lg sm:text-xl font-bold">¡Gracias por suscribirte!</p>
-                <p className="text-white/80 text-sm sm:text-base">Te avisaremos de nuestras novedades</p>
+                <p className="text-lg sm:text-xl font-bold mb-2">¡Gracias por suscribirte!</p>
+                
+                {newsletterCoupon && newsletterCoupon.success ? (
+                  <div className="mt-4">
+                    <p className="text-sm mb-3 text-white/90">
+                      ¡Tu cupón de {newsletterCoupon.tipo === 'porcentaje' ? `${newsletterCoupon.valor}%` : `$${newsletterCoupon.valor}`} descuento!
+                    </p>
+                    
+                    <div 
+                      className="bg-white/20 rounded-lg p-3 font-mono text-xl font-bold tracking-wider mb-2 cursor-pointer hover:bg-white/30 transition-colors"
+                      onClick={handleCopyNewsletterCoupon}
+                    >
+                      {newsletterCoupon.coupon_code}
+                    </div>
+                    
+                    <button
+                      onClick={handleCopyNewsletterCoupon}
+                      className="w-full py-2 px-4 bg-white/20 hover:bg-white/30 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-2 mb-3"
+                    >
+                      <span className="material-icons text-lg">
+                        {copiedNewsletterCoupon ? 'check' : 'content_copy'}
+                      </span>
+                      {copiedNewsletterCoupon ? '¡Copiado!' : 'Copiar código'}
+                    </button>
+                    
+                    <div className="text-xs space-y-1 text-white/70 mb-3">
+                      {newsletterCoupon.monto_minimo > 0 && (
+                        <p>• Compra mínima: ${newsletterCoupon.monto_minimo}</p>
+                      )}
+                      {newsletterCoupon.valido_hasta && (
+                        <p>• Válido hasta: {new Date(newsletterCoupon.valido_hasta).toLocaleDateString()}</p>
+                      )}
+                      <p>• Un solo uso</p>
+                    </div>
+                    
+                    <button
+                      onClick={() => window.location.href = '/productos'}
+                      className="w-full py-2 px-4 bg-white text-primary font-bold rounded-lg hover:bg-secondary-crema transition-colors"
+                    >
+                      ¡Ir a comprar!
+                    </button>
+                  </div>
+                ) : (
+                  <p className="text-white/80 text-sm sm:text-base">Te avisaremos de nuestras novedades</p>
+                )}
               </div>
             ) : (
               <form onSubmit={handleNewsletterSubmit} className="flex flex-col sm:flex-row gap-3 sm:gap-4 max-w-2xl mx-auto px-2">

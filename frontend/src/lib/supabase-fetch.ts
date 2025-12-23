@@ -1258,8 +1258,8 @@ export const popupsDB = {
   // Generar cupón desde popup
   generateCoupon: async (popupId: string, email: string) => {
     try {
-      const { data: { user } } = await import('@/lib/supabase/client').then(m => m.supabase.auth.getUser());
-      const accessToken = user?.access_token || getAccessToken();
+      const { data: { session } } = await import('@/lib/supabase/client').then(m => m.supabase.auth.getSession());
+      const accessToken = session?.access_token || getAccessToken();
       
       if (!accessToken) {
         console.error('No hay token de acceso');

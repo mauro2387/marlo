@@ -26,6 +26,13 @@ interface Popup {
   mostrar_en: string;
   frecuencia: string;
   delay_segundos: number;
+  generar_cupon: boolean;
+  cupon_tipo: 'porcentaje' | 'fijo' | null;
+  cupon_valor: number;
+  cupon_monto_minimo: number;
+  cupon_dias_validos: number;
+  cupon_prefijo: string | null;
+  cupon_descripcion: string | null;
 }
 
 const PLANTILLAS = [
@@ -68,6 +75,13 @@ const defaultPopup: Partial<Popup> = {
   mostrar_en: 'home',
   frecuencia: 'sesion',
   delay_segundos: 3,
+  generar_cupon: false,
+  cupon_tipo: null,
+  cupon_valor: 0,
+  cupon_monto_minimo: 0,
+  cupon_dias_validos: 30,
+  cupon_prefijo: 'POPUP',
+  cupon_descripcion: null,
 };
 
 export default function PopupsPage() {
@@ -388,7 +402,7 @@ export default function PopupsPage() {
             </div>
 
             {/* Checkboxes */}
-            <div className="flex items-center gap-4">
+            <div className="flex flex-col gap-4">
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"
@@ -398,7 +412,100 @@ export default function PopupsPage() {
                 />
                 <span className="text-sm">Mostrar campo de email</span>
               </label>
+
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formData.generar_cupon || false}
+                  onChange={(e) => setFormData(prev => ({ ...prev, generar_cupon: e.target.checked }))}
+                  className="w-4 h-4 rounded text-pink-500"
+                />
+                <span className="text-sm">Generar cupón automático</span>
+              </label>
             </div>
+
+            {/* Configuración de cupones */}
+            {formData.generar_cupon && (
+              <div className="border-l-4 border-pink-500 pl-4 space-y-4 bg-pink-50 p-4 rounded-lg">
+                <h4 className="font-semibold text-sm text-gray-700 mb-3">Configuración del cupón</h4>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Tipo de descuento</label>
+                    <select
+                      value={formData.cupon_tipo || 'porcentaje'}
+                      onChange={(e) => setFormData(prev => ({ ...prev, cupon_tipo: e.target.value as 'porcentaje' | 'fijo' }))}
+                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-pink-500"
+                    >
+                      <option value="porcentaje">Porcentaje (%)</option>
+                      <option value="fijo">Monto fijo ($)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Valor {formData.cupon_tipo === 'porcentaje' ? '(%)' : '($)'}
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={formData.cupon_valor || 0}
+                      onChange={(e) => setFormData(prev => ({ ...prev, cupon_valor: parseFloat(e.target.value) }))}
+                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-pink-500"
+                      placeholder="Ej: 10"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Compra mínima ($)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={formData.cupon_monto_minimo || 0}
+                      onChange={(e) => setFormData(prev => ({ ...prev, cupon_monto_minimo: parseFloat(e.target.value) }))}
+                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-pink-500"
+                      placeholder="0 = sin mínimo"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Días de validez</label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={formData.cupon_dias_validos || 30}
+                      onChange={(e) => setFormData(prev => ({ ...prev, cupon_dias_validos: parseInt(e.target.value) }))}
+                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-pink-500"
+                      placeholder="30"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Prefijo del código</label>
+                  <input
+                    type="text"
+                    maxLength={10}
+                    value={formData.cupon_prefijo || 'POPUP'}
+                    onChange={(e) => setFormData(prev => ({ ...prev, cupon_prefijo: e.target.value.toUpperCase() }))}
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-pink-500"
+                    placeholder="POPUP"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Ejemplo: {formData.cupon_prefijo || 'POPUP'}ABCD1234</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Descripción (opcional)</label>
+                  <textarea
+                    value={formData.cupon_descripcion || ''}
+                    onChange={(e) => setFormData(prev => ({ ...prev, cupon_descripcion: e.target.value }))}
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-pink-500"
+                    rows={2}
+                    placeholder="Descripción interna del cupón"
+                  />
+                </div>
+              </div>
+            )}
 
             {/* Delay */}
             <div>
@@ -526,12 +633,20 @@ export default function PopupsPage() {
                     </span>
                   </div>
                   
-                  <div className="text-xs text-gray-500 mb-3">
-                    <span className="material-icons text-xs mr-1">place</span>
-                    {PAGINAS.find(p => p.value === popup.mostrar_en)?.label}
-                    <span className="mx-2">•</span>
-                    <span className="material-icons text-xs mr-1">schedule</span>
-                    {FRECUENCIAS.find(f => f.value === popup.frecuencia)?.label}
+                  <div className="text-xs text-gray-500 mb-3 space-y-1">
+                    <div>
+                      <span className="material-icons text-xs mr-1">place</span>
+                      {PAGINAS.find(p => p.value === popup.mostrar_en)?.label}
+                      <span className="mx-2">•</span>
+                      <span className="material-icons text-xs mr-1">schedule</span>
+                      {FRECUENCIAS.find(f => f.value === popup.frecuencia)?.label}
+                    </div>
+                    {popup.generar_cupon && (
+                      <div className="flex items-center text-pink-600 font-medium">
+                        <span className="material-icons text-xs mr-1">local_offer</span>
+                        Cupón: {popup.cupon_tipo === 'porcentaje' ? `${popup.cupon_valor}%` : `$${popup.cupon_valor}`} descuento
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex gap-2">
