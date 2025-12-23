@@ -792,6 +792,92 @@ export default function ConfiguracionPage() {
         </div>
       </div>
 
+      {/* Horarios del Negocio */}
+      <div className="bg-white rounded-xl shadow-md p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+            🕒 Horarios del Negocio
+          </h3>
+        </div>
+        
+        <p className="text-sm text-gray-500 mb-6">
+          Configura los horarios de atención. Los clientes verán si estás abierto o cerrado en la página principal.
+        </p>
+
+        <div className="space-y-4">
+          {/* Nota informativa */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="flex items-start gap-3">
+              <span className="material-icons text-blue-500">info</span>
+              <div className="text-sm text-blue-800">
+                <p className="font-medium mb-1">Configuración de Horarios</p>
+                <p>Los horarios se configuran en el archivo <code className="bg-blue-100 px-1 rounded">frontend/src/config/constants.ts</code></p>
+                <p className="mt-2">Para modificar los horarios, edita la constante <code className="bg-blue-100 px-1 rounded">BUSINESS_HOURS</code> en ese archivo.</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Vista de horarios actuales */}
+          <div className="border border-gray-200 rounded-lg overflow-hidden">
+            <div className="bg-gray-50 px-4 py-2 border-b border-gray-200">
+              <h4 className="font-semibold text-sm text-gray-700">Horarios Actuales</h4>
+            </div>
+            <div className="divide-y divide-gray-200">
+              <div className="px-4 py-3 flex justify-between items-center">
+                <span className="text-sm font-medium text-gray-700">Lunes a Viernes</span>
+                <span className="text-sm text-gray-600">10:00 - 20:00</span>
+              </div>
+              <div className="px-4 py-3 flex justify-between items-center">
+                <span className="text-sm font-medium text-gray-700">Sábados</span>
+                <span className="text-sm text-gray-600">10:00 - 21:00</span>
+              </div>
+              <div className="px-4 py-3 flex justify-between items-center">
+                <span className="text-sm font-medium text-gray-700">Domingos y Feriados</span>
+                <span className="text-sm text-gray-600">11:00 - 20:00</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Botón para abrir archivo */}
+          <div className="flex gap-3">
+            <button
+              onClick={() => {
+                setMessage({ 
+                  type: 'success', 
+                  text: 'Abre frontend/src/config/constants.ts para editar los horarios' 
+                });
+                setTimeout(() => setMessage(null), 5000);
+              }}
+              className="flex-1 py-2 px-4 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition-colors flex items-center justify-center gap-2"
+            >
+              <span className="material-icons text-sm">edit_note</span>
+              Ver Instrucciones para Editar
+            </button>
+          </div>
+
+          {/* Instrucciones detalladas */}
+          <details className="bg-gray-50 rounded-lg p-4">
+            <summary className="cursor-pointer font-medium text-sm text-gray-700 flex items-center gap-2">
+              <span className="material-icons text-sm">help_outline</span>
+              ¿Cómo editar los horarios?
+            </summary>
+            <div className="mt-3 text-sm text-gray-600 space-y-2 pl-7">
+              <p>1. Abre el archivo <code className="bg-white px-2 py-0.5 rounded border">frontend/src/config/constants.ts</code></p>
+              <p>2. Busca la sección <code className="bg-white px-2 py-0.5 rounded border">BUSINESS_HOURS</code></p>
+              <p>3. Modifica los horarios según tus necesidades</p>
+              <p>4. Guarda el archivo y reinicia el servidor de desarrollo</p>
+              <div className="mt-3 bg-white p-3 rounded border border-gray-200 font-mono text-xs overflow-x-auto">
+                <pre>{`export const BUSINESS_HOURS = {
+  weekday: { open: '10:00', close: '20:00' },
+  saturday: { open: '10:00', close: '21:00' },
+  sunday: { open: '11:00', close: '20:00' }
+};`}</pre>
+              </div>
+            </div>
+          </details>
+        </div>
+      </div>
+
       {/* Imágenes Flotantes del Home */}
       <div className="bg-white rounded-xl shadow-md p-6">
         <div className="flex items-center justify-between mb-4">

@@ -62,6 +62,13 @@ export interface ProfileUpdateNotification {
 export interface NewsletterNotification {
   email: string;
   nombre?: string;
+  coupon?: {
+    code: string;
+    tipo: 'porcentaje' | 'fijo';
+    valor: number;
+    monto_minimo: number;
+    valido_hasta: string;
+  };
 }
 
 // ==================== EMAIL API ====================
@@ -203,6 +210,25 @@ export const emailService = {
 
   // Email de confirmación de newsletter
   sendNewsletterWelcome: async (data: NewsletterNotification) => {
+    const couponHtml = data.coupon ? `
+      <div style="background: linear-gradient(135deg, #10B981, #34D399); padding: 25px; margin: 30px 0; border-radius: 12px; text-align: center;">
+        <h3 style="color: white; margin: 0 0 15px 0; font-size: 24px;">🎁 ¡Tu Regalo de Bienvenida!</h3>
+        <div style="background: white; padding: 20px; border-radius: 8px; margin: 15px 0;">
+          <p style="color: #666; margin: 0 0 10px 0; font-size: 14px;">Tu código de descuento:</p>
+          <div style="background: #F3F4F6; padding: 15px; border-radius: 8px; border: 2px dashed #10B981;">
+            <span style="font-size: 28px; font-weight: bold; color: #10B981; font-family: monospace; letter-spacing: 2px;">${data.coupon.code}</span>
+          </div>
+          <div style="margin-top: 15px; font-size: 14px; color: #666;">
+            <p style="margin: 5px 0;"><strong>Descuento:</strong> ${data.coupon.tipo === 'porcentaje' ? `${data.coupon.valor}%` : `$${data.coupon.valor}`}</p>
+            ${data.coupon.monto_minimo > 0 ? `<p style="margin: 5px 0;"><strong>Compra mínima:</strong> $${data.coupon.monto_minimo}</p>` : ''}
+            <p style="margin: 5px 0;"><strong>Válido hasta:</strong> ${new Date(data.coupon.valido_hasta).toLocaleDateString('es-AR')}</p>
+            <p style="margin: 5px 0; font-size: 12px; color: #999;">Un solo uso por cliente</p>
+          </div>
+        </div>
+        <p style="color: white; margin: 10px 0; font-size: 14px;">Aplicá este código al finalizar tu compra</p>
+      </div>
+    ` : '';
+    
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <div style="background: linear-gradient(135deg, #EC4899, #F472B6); padding: 30px; text-align: center;">
@@ -214,6 +240,8 @@ export const emailService = {
           <h2 style="color: #EC4899;">¡Gracias por suscribirte! 🎉</h2>
           
           <p>Hola${data.nombre ? ` ${data.nombre}` : ''},</p>
+          
+          ${couponHtml}
           
           <p>Ahora sos parte de nuestra comunidad de amantes de las cookies. Vas a recibir:</p>
           

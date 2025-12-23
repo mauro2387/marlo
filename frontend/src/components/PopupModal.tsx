@@ -118,6 +118,19 @@ export default function PopupModal({ pagina }: PopupModalProps) {
         if (!couponError && couponResult) {
           setCouponCode(couponResult.coupon_code);
           setCouponData(couponResult);
+          
+          // Enviar email con cupón
+          const { notificationService } = await import('@/lib/notifications');
+          await notificationService.notifyNewsletterSubscription({
+            email,
+            coupon: {
+              code: couponResult.coupon_code,
+              tipo: couponResult.tipo,
+              valor: couponResult.valor,
+              monto_minimo: couponResult.monto_minimo,
+              valido_hasta: couponResult.valido_hasta,
+            },
+          });
         }
       }
       

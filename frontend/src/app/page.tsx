@@ -107,13 +107,25 @@ export default function Home() {
         const { data: couponData } = await popupsDB.generateCoupon(newsletterPopup.id, newsletterEmail);
         if (couponData && couponData.success) {
           setNewsletterCoupon(couponData);
+          
+          // Enviar email con cupón
+          await notificationService.notifyNewsletterSubscription({
+            email: newsletterEmail,
+            coupon: {
+              code: couponData.coupon_code,
+              tipo: couponData.tipo,
+              valor: couponData.valor,
+              monto_minimo: couponData.monto_minimo,
+              valido_hasta: couponData.valido_hasta,
+            },
+          });
         }
+      } else {
+        // Enviar email sin cupón
+        await notificationService.notifyNewsletterSubscription({
+          email: newsletterEmail,
+        });
       }
-      
-      // Enviar email de bienvenida
-      await notificationService.notifyNewsletterSubscription({
-        email: newsletterEmail,
-      });
       
       // Track Meta Pixel Lead event
       MetaPixelEvents.lead('newsletter');
