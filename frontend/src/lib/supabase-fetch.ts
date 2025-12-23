@@ -1254,6 +1254,43 @@ export const popupsDB = {
   delete: async (id: string) => {
     return supabaseFetch<any>(`popups?id=eq.${id}`, { method: 'DELETE' });
   },
+  
+  // Generar cupón desde popup
+  generateCoupon: async (popupId: string, email: string) => {
+    try {
+      const { data: { user } } = await import('@/lib/supabase/client').then(m => m.supabase.auth.getUser());
+      const accessToken = user?.access_token || getAccessToken();
+      
+      if (!accessToken) {
+        console.error('No hay token de acceso');
+        return { data: null, error: { message: 'No hay sesión activa' } };
+      }
+
+      const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/generate_coupon_from_popup`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          p_popup_id: popupId,
+          p_email: email
+        })
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        return { data: null, error: { message: errorText } };
+      }
+
+      const result = await response.json();
+      return { data: result, error: null };
+    } catch (err: any) {
+      console.error('Error generando cupón:', err);
+      return { data: null, error: err };
+    }
+  },
 };
 
 // ==================== HISTORIAL DE PUNTOS ====================

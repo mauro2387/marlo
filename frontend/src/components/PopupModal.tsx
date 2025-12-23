@@ -23,6 +23,11 @@ interface Popup {
   mostrar_input_email: boolean;
   delay_segundos: number;
   frecuencia: string;
+  generar_cupon?: boolean;
+  cupon_tipo?: string;
+  cupon_valor?: number;
+  cupon_monto_minimo?: number;
+  cupon_dias_validos?: number;
 }
 
 interface PopupModalProps {
@@ -35,6 +40,9 @@ export default function PopupModal({ pagina }: PopupModalProps) {
   const [email, setEmail] = useState('');
   const [subscribing, setSubscribing] = useState(false);
   const [subscribed, setSubscribed] = useState(false);
+  const [couponCode, setCouponCode] = useState<string | null>(null);
+  const [couponData, setCouponData] = useState<any>(null);
+  const [copiedCoupon, setCopiedCoupon] = useState(false);
 
   useEffect(() => {
     loadActivePopup();
@@ -98,16 +106,39 @@ export default function PopupModal({ pagina }: PopupModalProps) {
     
     setSubscribing(true);
     try {
-      // Usar método subscribe que detecta automáticamente si es usuario registrado
+      // Suscribir al newsletter
       await subscribersDB.subscribe({
         email
       });
+      
+      // Si el popup debe generar cupón, llamar a la función
+      if (popup?.generar_cupon) {
+        const { data: couponResult, error: couponError } = await popupsDB.generateCoupon(popup.id, email);
+        
+        if (!couponError && couponResult) {
+          setCouponCode(couponResult.coupon_code);
+          setCouponData(couponResult);
+        }
+      }
+      
       setSubscribed(true);
-      setTimeout(handleClose, 2000);
+      
+      // No cerrar automáticamente si hay cupón para mostrar
+      if (!popup?.generar_cupon) {
+        setTimeout(handleClose, 2000);
+      }
     } catch (err) {
       console.error('Error suscribiendo:', err);
     } finally {
       setSubscribing(false);
+    }
+  };
+
+  const handleCopyCoupon = () => {
+    if (couponCode) {
+      navigator.clipboard.writeText(couponCode);
+      setCopiedCoupon(true);
+      setTimeout(() => setCopiedCoupon(false), 2000);
     }
   };
 
@@ -223,9 +254,60 @@ export default function PopupModal({ pagina }: PopupModalProps) {
           ) : subscribed ? (
             <div className="py-4">
               <span className="material-icons text-5xl text-green-500 mb-2">check_circle</span>
-              <p className="font-semibold" style={{ color: popup.color_titulo }}>
+              <p className="font-semibold mb-4" style={{ color: popup.color_titulo }}>
                 ¡Gracias por suscribirte!
               </p>
+              
+              {/* Mostrar cupón si se generó */}
+              {couponCode && couponData && (
+                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 mt-4 border-2 border-dashed border-white/30">
+                  <p className="text-sm mb-2" style={{ color: popup.color_texto }}>
+                    Tu cupón de {couponData.tipo === 'porcentaje' ? `${couponData.valor}%` : `$${couponData.valor}`} descuento:
+                  </p>
+                  
+                  <div className="relative">
+                    <div 
+                      className="bg-white/20 rounded-lg p-3 font-mono text-xl font-bold tracking-wider mb-2 cursor-pointer hover:bg-white/30 transition-colors"
+                      onClick={handleCopyCoupon}
+                      style={{ color: popup.color_titulo }}
+                    >
+                      {couponCode}
+                    </div>
+                    
+                    <button
+                      onClick={handleCopyCoupon}
+                      className="w-full py-2 px-4 bg-white/20 hover:bg-white/30 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-2"
+                      style={{ color: popup.color_texto }}
+                    >
+                      <span className="material-icons text-lg">
+                        {copiedCoupon ? 'check' : 'content_copy'}
+                      </span>
+                      {copiedCoupon ? '¡Copiado!' : 'Copiar código'}
+                    </button>
+                  </div>
+                  
+                  <div className="mt-3 text-xs space-y-1" style={{ color: popup.color_texto, opacity: 0.8 }}>
+                    {couponData.monto_minimo > 0 && (
+                      <p>• Compra mínima: ${couponData.monto_minimo}</p>
+                    )}
+                    {couponData.valido_hasta && (
+                      <p>• Válido hasta: {new Date(couponData.valido_hasta).toLocaleDateString()}</p>
+                    )}
+                    <p>• Un solo uso</p>
+                  </div>
+                  
+                  <button
+                    onClick={handleClose}
+                    className="w-full mt-4 py-2 rounded-lg font-semibold transition-all hover:opacity-90"
+                    style={{ 
+                      backgroundColor: popup.color_boton,
+                      color: popup.color_boton_texto 
+                    }}
+                  >
+                    ¡Ir a comprar!
+                  </button>
+                </div>
+              )}
             </div>
           ) : (
             <div className="space-y-3">

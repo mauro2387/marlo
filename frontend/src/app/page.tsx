@@ -818,7 +818,7 @@ export default function Home() {
               <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 sm:p-6 max-w-lg mx-auto">
                 <span className="material-icons text-3xl sm:text-4xl text-green-300 mb-2 block">check_circle</span>
                 <p className="text-lg sm:text-xl font-bold">¡Gracias por suscribirte!</p>
-                <p className="text-white/80 text-sm sm:text-base">Pronto recibirás tu cupón de $500</p>
+                <p className="text-white/80 text-sm sm:text-base">Te avisaremos de nuestras novedades</p>
               </div>
             ) : (
               <form onSubmit={handleNewsletterSubmit} className="flex flex-col sm:flex-row gap-3 sm:gap-4 max-w-2xl mx-auto px-2">
@@ -845,8 +845,8 @@ export default function Home() {
             )}
 
             <p className="text-xs sm:text-sm text-white/70 mt-4 sm:mt-6 flex items-center justify-center gap-1.5 sm:gap-2">
-              <span className="material-icons text-lg sm:text-xl">card_giftcard</span>
-              Al suscribirte recibes un cupón de $500 para tu primera compra
+              <span className="material-icons text-lg sm:text-xl">notifications_active</span>
+              Entérate primero de nuevos sabores y ofertas exclusivas
             </p>
 
             <div className="grid grid-cols-3 gap-3 sm:gap-6 mt-8 sm:mt-12 pt-6 sm:pt-12 border-t border-white/20">
