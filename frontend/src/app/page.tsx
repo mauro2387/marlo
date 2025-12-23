@@ -10,7 +10,7 @@ import PromoBannerCarousel from '@/components/PromoBannerCarousel';
 import ScrollAnimation from '@/components/ScrollAnimation';
 import { useEffect, useState } from 'react';
 import { productsService } from '@/services/supabase-api';
-import { floatingImagesDB, subscribersDB, featuredCardsDB, popupsDB } from '@/lib/supabase-fetch';
+import { floatingImagesDB, subscribersDB, featuredCardsDB, popupsDB, siteSettingsDB } from '@/lib/supabase-fetch';
 import { notificationService } from '@/lib/notifications';
 import { isOpenNow, BUSINESS_HOURS } from '@/config/constants';
 import type { Product } from '@/types';
@@ -85,6 +85,9 @@ export default function Home() {
   const [newsletterError, setNewsletterError] = useState('');
   const [newsletterCoupon, setNewsletterCoupon] = useState<any>(null);
   const [copiedNewsletterCoupon, setCopiedNewsletterCoupon] = useState(false);
+  
+  // Horarios del negocio desde la base de datos
+  const [businessHours, setBusinessHours] = useState(BUSINESS_HOURS);
   
   const handleNewsletterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -165,6 +168,21 @@ export default function Home() {
       }
     };
     loadFloatingImages();
+  }, []);
+
+  // Cargar horarios desde Supabase
+  useEffect(() => {
+    const loadBusinessHours = async () => {
+      try {
+        const { data } = await siteSettingsDB.get();
+        if (data && data.business_hours) {
+          setBusinessHours(data.business_hours);
+        }
+      } catch (err) {
+        console.log('Usando horarios por defecto');
+      }
+    };
+    loadBusinessHours();
   }, []);
 
   // Cargar tarjetas destacadas desde Supabase
@@ -1016,8 +1034,8 @@ export default function Home() {
                 </h3>
                 
                 <div className="space-y-3 sm:space-y-4">
-                  {BUSINESS_HOURS.map((schedule, index) => (
-                    <div key={index} className={`flex justify-between items-center ${index < BUSINESS_HOURS.length - 1 ? 'pb-2 sm:pb-3 border-b border-gray-200' : ''}`}>
+                  {businessHours.map((schedule, index) => (
+                    <div key={index} className={`flex justify-between items-center ${index < businessHours.length - 1 ? 'pb-2 sm:pb-3 border-b border-gray-200' : ''}`}>
                       <span className="font-semibold text-gray-700 text-sm sm:text-base">{schedule.day}</span>
                       <span className={`font-bold text-sm sm:text-base ${schedule.open ? 'text-primary' : 'text-gray-500'}`}>
                         {schedule.hours}

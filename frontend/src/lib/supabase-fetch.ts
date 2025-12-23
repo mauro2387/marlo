@@ -965,6 +965,7 @@ export const siteSettingsDB = {
     limited_banner_active?: boolean;
     limited_banner_products?: string[];
     limited_banner_show_images?: boolean;
+    business_hours?: any;
   }) => {
     return supabaseFetch<any>('site_settings?id=eq.main', { 
       method: 'PATCH', 
