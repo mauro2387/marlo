@@ -27,36 +27,106 @@ export const SOCIAL_MEDIA = {
   tiktok: 'https://www.tiktok.com/@marlo_cookies',
 };
 
-// Horarios de atención
-export const BUSINESS_HOURS = [
-  { day: 'Miércoles - Lunes', hours: '15:00 - 20:00', open: true },
-  { day: 'Martes', hours: 'Cerrado', open: false },
+// Horarios de atención (formato por día)
+export interface BusinessHour {
+  day: string;
+  hours: string;
+  open: boolean;
+  dayIndex?: number; // 0=Domingo, 1=Lunes... 6=Sábado
+}
+
+export const BUSINESS_HOURS: BusinessHour[] = [
+  { day: 'Lunes', hours: '15:00 - 22:00', open: true, dayIndex: 1 },
+  { day: 'Martes', hours: '15:00 - 22:00', open: true, dayIndex: 2 },
+  { day: 'Miércoles', hours: '15:00 - 22:00', open: true, dayIndex: 3 },
+  { day: 'Jueves', hours: '15:00 - 22:00', open: true, dayIndex: 4 },
+  { day: 'Viernes', hours: '15:00 - 22:00', open: true, dayIndex: 5 },
+  { day: 'Sábado', hours: '15:00 - 22:00', open: true, dayIndex: 6 },
+  { day: 'Domingo', hours: '15:00 - 22:00', open: true, dayIndex: 0 },
 ];
 
+// Nombres de días en español
+const DAY_NAMES = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+
+// Parsear hora "15:00" a número decimal
+const parseTime = (timeStr: string): number => {
+  const [hours, minutes] = timeStr.split(':').map(Number);
+  return hours + (minutes || 0) / 60;
+};
+
 // Función para verificar si está abierto ahora
-export const isOpenNow = (): { open: boolean; message: string } => {
+export const isOpenNow = (hours?: BusinessHour[]): { open: boolean; message: string } => {
+  const businessHours = hours || BUSINESS_HOURS;
   const now = new Date();
   const dayOfWeek = now.getDay(); // 0 = Domingo, 1 = Lunes, ..., 6 = Sábado
-  const hour = now.getHours();
-  const minutes = now.getMinutes();
-  const currentTime = hour + minutes / 60;
-
-  // Martes (2) está cerrado
-  if (dayOfWeek === 2) {
-    return { open: false, message: 'Cerrado - Abrimos mañana a las 15:00' };
+  const currentHour = now.getHours();
+  const currentMinutes = now.getMinutes();
+  const currentTime = currentHour + currentMinutes / 60;
+  const todayName = DAY_NAMES[dayOfWeek];
+  
+  // Buscar horario de hoy
+  const todaySchedule = businessHours.find(h => 
+    h.dayIndex === dayOfWeek || h.day === todayName || h.day.includes(todayName)
+  );
+  
+  // Si no hay horario para hoy o está cerrado
+  if (!todaySchedule || !todaySchedule.open || todaySchedule.hours.toLowerCase() === 'cerrado') {
+    const nextOpenDay = findNextOpenDay(businessHours, dayOfWeek);
+    return { 
+      open: false, 
+      message: nextOpenDay ? `Cerrado - Abrimos ${nextOpenDay}` : 'Cerrado' 
+    };
   }
-
-  // Miércoles a Lunes: 15:00 - 20:00
-  if (currentTime >= 15 && currentTime < 20) {
-    return { open: true, message: 'Abierto Ahora - Cierra a las 20:00' };
+  
+  // Parsear horario de apertura y cierre
+  const hoursMatch = todaySchedule.hours.match(/(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})/);
+  if (!hoursMatch) {
+    return { open: false, message: 'Horario no disponible' };
   }
-
-  // Fuera del horario de atención
-  if (currentTime < 15) {
-    return { open: false, message: dayOfWeek === 1 ? 'Cerrado - Abrimos mañana a las 15:00' : 'Cerrado - Abrimos hoy a las 15:00' };
-  } else {
-    return { open: false, message: dayOfWeek === 1 ? 'Cerrado - Abrimos mañana a las 15:00' : 'Cerrado - Abrimos mañana a las 15:00' };
+  
+  const openTime = parseTime(hoursMatch[1]);
+  const closeTime = parseTime(hoursMatch[2]);
+  
+  // Verificar si estamos dentro del horario
+  if (currentTime >= openTime && currentTime < closeTime) {
+    const closeHour = hoursMatch[2];
+    return { open: true, message: `Abierto ahora - Cierra a las ${closeHour}` };
   }
+  
+  // Antes de abrir hoy
+  if (currentTime < openTime) {
+    const openHour = hoursMatch[1];
+    return { open: false, message: `Cerrado - Abrimos hoy a las ${openHour}` };
+  }
+  
+  // Después de cerrar, buscar próximo día abierto
+  const nextOpenDay = findNextOpenDay(businessHours, dayOfWeek);
+  return { 
+    open: false, 
+    message: nextOpenDay ? `Cerrado - Abrimos ${nextOpenDay}` : 'Cerrado' 
+  };
+};
+
+// Encontrar próximo día que abre
+const findNextOpenDay = (hours: BusinessHour[], currentDay: number): string | null => {
+  for (let i = 1; i <= 7; i++) {
+    const checkDay = (currentDay + i) % 7;
+    const dayName = DAY_NAMES[checkDay];
+    const schedule = hours.find(h => 
+      h.dayIndex === checkDay || h.day === dayName || h.day.includes(dayName)
+    );
+    
+    if (schedule && schedule.open && schedule.hours.toLowerCase() !== 'cerrado') {
+      const hoursMatch = schedule.hours.match(/(\d{1,2}:\d{2})/);
+      const openTime = hoursMatch ? hoursMatch[1] : '';
+      
+      if (i === 1) {
+        return `mañana a las ${openTime}`;
+      }
+      return `el ${dayName} a las ${openTime}`;
+    }
+  }
+  return null;
 };
 
 // Sistema de puntos

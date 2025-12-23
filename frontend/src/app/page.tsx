@@ -12,7 +12,7 @@ import { useEffect, useState } from 'react';
 import { productsService } from '@/services/supabase-api';
 import { floatingImagesDB, subscribersDB, featuredCardsDB, popupsDB, siteSettingsDB } from '@/lib/supabase-fetch';
 import { notificationService } from '@/lib/notifications';
-import { isOpenNow, BUSINESS_HOURS } from '@/config/constants';
+import { isOpenNow, BUSINESS_HOURS, type BusinessHour } from '@/config/constants';
 import type { Product } from '@/types';
 import { MetaPixelEvents } from '@/components/MetaPixel';
 
@@ -87,7 +87,7 @@ export default function Home() {
   const [copiedNewsletterCoupon, setCopiedNewsletterCoupon] = useState(false);
   
   // Horarios del negocio desde la base de datos
-  const [businessHours, setBusinessHours] = useState(BUSINESS_HOURS);
+  const [businessHours, setBusinessHours] = useState<BusinessHour[]>(BUSINESS_HOURS);
   
   const handleNewsletterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1045,7 +1045,7 @@ export default function Home() {
                 </div>
 
                 {(() => {
-                  const status = isOpenNow();
+                  const status = isOpenNow(businessHours);
                   return (
                     <div className={`mt-4 sm:mt-6 p-3 sm:p-4 rounded-lg border ${
                       status.open 

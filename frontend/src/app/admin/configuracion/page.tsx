@@ -86,10 +86,15 @@ export default function ConfiguracionPage() {
   const [showNewForm, setShowNewForm] = useState(false);
   const [newBanner, setNewBanner] = useState({ texto: '', link: '', linkType: 'none' as 'none' | 'internal' | 'external' });
   
-  // Horarios del negocio
+  // Horarios del negocio - formato por día de la semana
   const [businessHours, setBusinessHours] = useState([
-    { day: 'Miércoles - Lunes', hours: '15:00 - 20:00', open: true },
-    { day: 'Martes', hours: 'Cerrado', open: false },
+    { day: 'Lunes', hours: '15:00 - 22:00', open: true, dayIndex: 1 },
+    { day: 'Martes', hours: '15:00 - 22:00', open: true, dayIndex: 2 },
+    { day: 'Miércoles', hours: '15:00 - 22:00', open: true, dayIndex: 3 },
+    { day: 'Jueves', hours: '15:00 - 22:00', open: true, dayIndex: 4 },
+    { day: 'Viernes', hours: '15:00 - 22:00', open: true, dayIndex: 5 },
+    { day: 'Sábado', hours: '15:00 - 22:00', open: true, dayIndex: 6 },
+    { day: 'Domingo', hours: '15:00 - 22:00', open: true, dayIndex: 0 },
   ]);
   const [editingHours, setEditingHours] = useState(false);
 
@@ -294,14 +299,14 @@ export default function ConfiguracionPage() {
     }
   };
 
-  const handleUpdateHour = (index: number, field: 'day' | 'hours' | 'open', value: string | boolean) => {
+  const handleUpdateHour = (index: number, field: 'day' | 'hours' | 'open' | 'dayIndex', value: string | boolean | number) => {
     setBusinessHours(prev => prev.map((h, i) => 
       i === index ? { ...h, [field]: value } : h
     ));
   };
 
   const handleAddHourSlot = () => {
-    setBusinessHours(prev => [...prev, { day: 'Nuevo día', hours: '00:00 - 00:00', open: true }]);
+    setBusinessHours(prev => [...prev, { day: 'Nuevo horario', hours: '00:00 - 00:00', open: true, dayIndex: -1 }]);
   };
 
   const handleRemoveHourSlot = (index: number) => {
@@ -862,10 +867,19 @@ export default function ConfiguracionPage() {
 
         {editingHours ? (
           <div className="space-y-4">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+              <p className="text-sm text-blue-700">
+                <span className="font-medium">💡 Tip:</span> Define el horario para cada día de la semana. 
+                Para días especiales (feriados, eventos), agrega una línea extra con la fecha específica.
+              </p>
+            </div>
+            
             {businessHours.map((schedule, index) => (
               <div key={index} className="border border-gray-200 rounded-lg p-4 space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="font-medium text-sm text-gray-700">Horario {index + 1}</span>
+                  <span className="font-medium text-sm text-gray-700">
+                    {schedule.dayIndex !== undefined && schedule.dayIndex >= 0 ? '📅' : '⭐'} {schedule.day || 'Sin nombre'}
+                  </span>
                   {businessHours.length > 1 && (
                     <button
                       onClick={() => handleRemoveHourSlot(index)}
@@ -877,15 +891,15 @@ export default function ConfiguracionPage() {
                   )}
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Día(s)</label>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Día / Fecha</label>
                     <input
                       type="text"
                       value={schedule.day}
                       onChange={(e) => handleUpdateHour(index, 'day', e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
-                      placeholder="Ej: Lunes a Viernes"
+                      placeholder="Ej: Lunes, 24/12, Feriado"
                     />
                   </div>
                   
@@ -896,20 +910,30 @@ export default function ConfiguracionPage() {
                       value={schedule.hours}
                       onChange={(e) => handleUpdateHour(index, 'hours', e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
-                      placeholder="Ej: 10:00 - 20:00 o Cerrado"
+                      placeholder="Ej: 15:00 - 22:00"
+                      disabled={!schedule.open}
                     />
                   </div>
-                </div>
 
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={schedule.open}
-                    onChange={(e) => handleUpdateHour(index, 'open', e.target.checked)}
-                    className="w-4 h-4 rounded text-blue-500"
-                  />
-                  <span className="text-sm text-gray-700">Abierto en este horario</span>
-                </label>
+                  <div className="flex items-end">
+                    <label className="flex items-center gap-2 cursor-pointer py-2">
+                      <input
+                        type="checkbox"
+                        checked={schedule.open}
+                        onChange={(e) => {
+                          handleUpdateHour(index, 'open', e.target.checked);
+                          if (!e.target.checked) {
+                            handleUpdateHour(index, 'hours', 'Cerrado');
+                          }
+                        }}
+                        className="w-4 h-4 rounded text-blue-500"
+                      />
+                      <span className={`text-sm ${schedule.open ? 'text-green-600 font-medium' : 'text-gray-500'}`}>
+                        {schedule.open ? '✓ Abierto' : 'Cerrado'}
+                      </span>
+                    </label>
+                  </div>
+                </div>
               </div>
             ))}
 
@@ -918,7 +942,7 @@ export default function ConfiguracionPage() {
               className="w-full py-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-blue-400 hover:text-blue-500 transition-colors flex items-center justify-center gap-2"
             >
               <span className="material-icons text-sm">add</span>
-              Agregar Horario
+              Agregar Día / Horario Especial
             </button>
 
             <div className="flex gap-3 pt-4">
@@ -951,14 +975,20 @@ export default function ConfiguracionPage() {
               <div className="divide-y divide-gray-200">
                 {businessHours.map((schedule, index) => (
                   <div key={index} className="px-4 py-3 flex justify-between items-center">
-                    <span className="text-sm font-medium text-gray-700">{schedule.day}</span>
+                    <span className="text-sm font-medium text-gray-700">
+                      {schedule.dayIndex !== undefined && schedule.dayIndex >= 0 ? '📅' : '⭐'} {schedule.day}
+                    </span>
                     <div className="flex items-center gap-2">
-                      <span className="text-sm text-gray-600">{schedule.hours}</span>
-                      {schedule.open && (
-                        <span className="px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs font-medium">
-                          Abierto
-                        </span>
-                      )}
+                      <span className={`text-sm ${schedule.open ? 'text-gray-600' : 'text-red-500'}`}>
+                        {schedule.hours}
+                      </span>
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                        schedule.open 
+                          ? 'bg-green-100 text-green-700' 
+                          : 'bg-red-100 text-red-700'
+                      }`}>
+                        {schedule.open ? 'Abierto' : 'Cerrado'}
+                      </span>
                     </div>
                   </div>
                 ))}
