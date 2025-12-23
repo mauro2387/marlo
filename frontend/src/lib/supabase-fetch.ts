@@ -966,6 +966,9 @@ export const siteSettingsDB = {
     limited_banner_products?: string[];
     limited_banner_show_images?: boolean;
     business_hours?: any;
+    google_rating?: number;
+    google_reviews_count?: number;
+    google_reviews_url?: string;
   }) => {
     return supabaseFetch<any>('site_settings?id=eq.main', { 
       method: 'PATCH', 

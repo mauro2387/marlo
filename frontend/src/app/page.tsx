@@ -89,6 +89,13 @@ export default function Home() {
   // Horarios del negocio desde la base de datos
   const [businessHours, setBusinessHours] = useState<BusinessHour[]>(BUSINESS_HOURS);
   
+  // Google Reviews desde la base de datos
+  const [googleReviews, setGoogleReviews] = useState({
+    rating: 4.9,
+    count: 21,
+    url: 'https://www.google.com/search?kgmid=/g/11ybpp3pv9#lrd=0x9575110030adacd1:0x62e6dd03788fee45,1'
+  });
+  
   const handleNewsletterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newsletterEmail) return;
@@ -170,19 +177,28 @@ export default function Home() {
     loadFloatingImages();
   }, []);
 
-  // Cargar horarios desde Supabase
+  // Cargar horarios y Google Reviews desde Supabase
   useEffect(() => {
-    const loadBusinessHours = async () => {
+    const loadSiteSettings = async () => {
       try {
         const { data } = await siteSettingsDB.get();
-        if (data && data.business_hours) {
-          setBusinessHours(data.business_hours);
+        if (data) {
+          if (data.business_hours) {
+            setBusinessHours(data.business_hours);
+          }
+          if (data.google_rating || data.google_reviews_count) {
+            setGoogleReviews({
+              rating: data.google_rating || 4.9,
+              count: data.google_reviews_count || 21,
+              url: data.google_reviews_url || googleReviews.url
+            });
+          }
         }
       } catch (err) {
-        console.log('Usando horarios por defecto');
+        console.log('Usando configuraciones por defecto');
       }
     };
-    loadBusinessHours();
+    loadSiteSettings();
   }, []);
 
   // Cargar tarjetas destacadas desde Supabase
@@ -769,7 +785,7 @@ export default function Home() {
             {/* Google Reviews Badge - Clickeable */}
             <div className="flex justify-center px-4">
               <a 
-                href="https://www.google.com/search?kgmid=/g/11ybpp3pv9#lrd=0x9575110030adacd1:0x62e6dd03788fee45,1"
+                href={googleReviews.url}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-block group w-full max-w-md"
@@ -790,7 +806,7 @@ export default function Home() {
                   <div className="flex items-center justify-center gap-2 mb-3">
                     <div className="flex gap-0.5 sm:gap-1">
                       {[...Array(5)].map((_, i) => (
-                        <svg key={i} className="w-5 h-5 sm:w-8 sm:h-8" fill="#FBBC04" viewBox="0 0 24 24">
+                        <svg key={i} className="w-5 h-5 sm:w-8 sm:h-8" fill={i < Math.floor(googleReviews.rating) ? "#FBBC04" : (i < googleReviews.rating ? "#FBBC04" : "#E5E7EB")} viewBox="0 0 24 24">
                           <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                         </svg>
                       ))}
@@ -799,13 +815,13 @@ export default function Home() {
 
                   {/* Rating numérico */}
                   <div className="text-center mb-3 sm:mb-4">
-                    <span className="text-3xl sm:text-5xl font-bold text-gray-800">4.8</span>
+                    <span className="text-3xl sm:text-5xl font-bold text-gray-800">{googleReviews.rating.toFixed(1)}</span>
                     <span className="text-gray-500 text-base sm:text-xl ml-1 sm:ml-2">/ 5.0</span>
                   </div>
 
                   {/* Cantidad de reseñas */}
                   <p className="text-gray-600 text-sm sm:text-base mb-3 sm:mb-4">
-                    Basado en <span className="font-semibold text-primary">19 reseñas</span> reales
+                    Basado en <span className="font-semibold text-primary">{googleReviews.count} reseñas</span> reales
                   </p>
 
                   {/* Botón CTA */}

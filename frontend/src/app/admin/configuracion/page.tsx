@@ -97,6 +97,13 @@ export default function ConfiguracionPage() {
     { day: 'Domingo', hours: '15:00 - 22:00', open: true, dayIndex: 0 },
   ]);
   const [editingHours, setEditingHours] = useState(false);
+  
+  // Google Reviews
+  const [googleReviews, setGoogleReviews] = useState({
+    rating: 4.9,
+    count: 21,
+    url: 'https://www.google.com/search?kgmid=/g/11ybpp3pv9#lrd=0x9575110030adacd1:0x62e6dd03788fee45,1'
+  });
 
   useEffect(() => {
     fetchData();
@@ -144,6 +151,15 @@ export default function ConfiguracionPage() {
         // Cargar horarios guardados
         if (settingsRes.data.business_hours) {
           setBusinessHours(settingsRes.data.business_hours);
+        }
+        
+        // Cargar Google Reviews
+        if (settingsRes.data.google_rating || settingsRes.data.google_reviews_count) {
+          setGoogleReviews({
+            rating: settingsRes.data.google_rating || 4.9,
+            count: settingsRes.data.google_reviews_count || 21,
+            url: settingsRes.data.google_reviews_url || googleReviews.url
+          });
         }
         
         // Productos seleccionados para el banner
@@ -316,6 +332,25 @@ export default function ConfiguracionPage() {
       return;
     }
     setBusinessHours(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // Guardar Google Reviews
+  const handleSaveGoogleReviews = async () => {
+    setSaving('google');
+    try {
+      const { error } = await siteSettingsDB.update({
+        google_rating: googleReviews.rating,
+        google_reviews_count: googleReviews.count,
+        google_reviews_url: googleReviews.url
+      });
+      if (error) throw error;
+      setMessage({ type: 'success', text: 'Google Reviews actualizado correctamente' });
+    } catch (err: any) {
+      setMessage({ type: 'error', text: err?.message || 'Error al guardar' });
+    } finally {
+      setSaving(null);
+      setTimeout(() => setMessage(null), 3000);
+    }
   };
 
   // Quitar producto del banner
@@ -996,6 +1031,97 @@ export default function ConfiguracionPage() {
             </div>
           </div>
         )}
+      </div>
+
+      {/* Google Reviews */}
+      <div className="bg-white rounded-xl shadow-md p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+            ⭐ Google Reviews
+          </h3>
+          <a 
+            href="https://www.google.com/search?q=marlo+cookies"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm text-blue-500 hover:text-blue-700 flex items-center gap-1"
+          >
+            Ver en Google
+            <span className="material-icons text-sm">open_in_new</span>
+          </a>
+        </div>
+        
+        <p className="text-sm text-gray-500 mb-6">
+          💡 <strong>Actualización manual:</strong> Google no ofrece API gratuita para reseñas. 
+          Actualiza estos valores cuando veas cambios en tu perfil de Google Business.
+        </p>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              ⭐ Rating (1.0 - 5.0)
+            </label>
+            <input
+              type="number"
+              step="0.1"
+              min="1"
+              max="5"
+              value={googleReviews.rating}
+              onChange={(e) => setGoogleReviews(prev => ({ ...prev, rating: parseFloat(e.target.value) || 0 }))}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              📝 Cantidad de Reseñas
+            </label>
+            <input
+              type="number"
+              min="0"
+              value={googleReviews.count}
+              onChange={(e) => setGoogleReviews(prev => ({ ...prev, count: parseInt(e.target.value) || 0 }))}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          
+          <div className="md:col-span-1">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              🔗 URL de Reseñas
+            </label>
+            <input
+              type="url"
+              value={googleReviews.url}
+              onChange={(e) => setGoogleReviews(prev => ({ ...prev, url: e.target.value }))}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-xs"
+              placeholder="https://www.google.com/search?..."
+            />
+          </div>
+        </div>
+
+        {/* Preview */}
+        <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+          <p className="text-sm text-gray-600 mb-2">Vista previa:</p>
+          <div className="flex items-center gap-3">
+            <div className="flex gap-0.5">
+              {[...Array(5)].map((_, i) => (
+                <svg key={i} className="w-5 h-5" fill={i < Math.floor(googleReviews.rating) ? "#FBBC04" : "#E5E7EB"} viewBox="0 0 24 24">
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                </svg>
+              ))}
+            </div>
+            <span className="font-bold text-lg">{googleReviews.rating.toFixed(1)}</span>
+            <span className="text-gray-500">({googleReviews.count} reseñas)</span>
+          </div>
+        </div>
+
+        <button
+          onClick={handleSaveGoogleReviews}
+          disabled={saving === 'google'}
+          className="mt-4 px-6 py-2 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 disabled:opacity-50 flex items-center gap-2"
+        >
+          <span className="material-icons text-sm">save</span>
+          {saving === 'google' ? 'Guardando...' : 'Guardar'}
+        </button>
       </div>
 
       {/* Imágenes Flotantes del Home */}
