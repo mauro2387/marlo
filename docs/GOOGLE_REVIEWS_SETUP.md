@@ -1,53 +1,123 @@
-# 🌟 Integración de Google Reviews - Guía Completa
+# 🌟 Google Reviews - API en Tiempo Real
 
-## Opción 1: Elfsight Widget (RECOMENDADA - Más Fácil) ⭐
+## ✅ Implementación Actual
 
-### Ventajas:
-- ✅ **Gratis** hasta 200 vistas/mes (suficiente para empezar)
-- ✅ Setup en 5 minutos
-- ✅ Se actualiza automáticamente con nuevas reseñas
-- ✅ Diseño responsive y personalizable
-- ✅ No requiere código backend
+El sitio usa **Google Places API (New)** para obtener las reseñas en tiempo real.
 
-### Pasos:
-
-1. **Crear cuenta en Elfsight:**
-   - Ve a: https://elfsight.com/google-reviews-widget/
-   - Click en "Get Started Free"
-   - Regístrate con tu email
-
-2. **Conectar Google My Business:**
-   - En el panel de Elfsight, click "Add Widget"
-   - Selecciona "Google Reviews"
-   - Ingresa el nombre de tu negocio o URL de Google Maps
-   - Elfsight lo encontrará automáticamente
-
-3. **Personalizar diseño:**
-   - Elige layout: Grid (recomendado), Slider, List
-   - Colores: Puedes usar #8B4513 (marrón) y #FF69B4 (rosa)
-   - Cantidad de reseñas a mostrar: 3-6
-   - Mostrar estrellas, fechas, fotos de perfil
-
-4. **Obtener código:**
-   - Click en "Publish"
-   - Copia el código del widget (se ve así):
-   ```html
-   <script src="https://static.elfsight.com/platform/platform.js" data-use-service-core defer></script>
-   <div class="elfsight-app-XXXXX-XXXXX-XXXXX"></div>
-   ```
-
-5. **Instalar en tu sitio:**
-   - Dame el código que te da Elfsight
-   - Lo integro en la página principal reemplazando las reseñas mock
+### Características:
+- ✅ Rating y cantidad de reseñas actualizados automáticamente
+- ✅ Cache de 1 hora para optimizar costos
+- ✅ Fallback a valores manuales si la API falla
+- ✅ $200 USD de crédito gratuito mensual
 
 ---
 
-## Opción 2: Google Places API (Más Control) 🔧
+## Configuración
 
-### Ventajas:
-- ✅ Control total sobre el diseño
-- ✅ Datos en tiempo real desde Google
-- ✅ Puedes filtrar, ordenar, personalizar
+### 1. Crear Proyecto en Google Cloud
+
+1. Ve a [Google Cloud Console](https://console.cloud.google.com/)
+2. Crea un nuevo proyecto o selecciona uno existente
+3. Habilita la facturación (requerido, pero hay crédito gratuito)
+
+### 2. Habilitar la API
+
+1. Ve a **APIs & Services > Library**
+2. Busca **"Places API (New)"**
+3. Click en **Enable**
+
+### 3. Crear API Key
+
+1. Ve a **APIs & Services > Credentials**
+2. Click en **Create Credentials > API Key**
+3. Copia la API key generada
+
+### 4. Restringir la API Key (IMPORTANTE)
+
+1. Click en tu API key
+2. En **Application restrictions**: HTTP referrers
+3. Agrega:
+   - `https://marlocookies.com/*`
+   - `https://*.vercel.app/*`
+4. En **API restrictions**: Solo **Places API (New)**
+5. Click **Save**
+
+### 5. Configurar en Vercel
+
+```bash
+vercel env add GOOGLE_PLACES_API_KEY
+# Pega tu API key
+# Selecciona todos los ambientes
+
+vercel --prod  # Redesplegar
+```
+
+---
+
+## Costos
+
+| Concepto | Valor |
+|----------|-------|
+| Crédito gratuito mensual | $200 USD |
+| Costo por consulta | ~$0.017 USD |
+| Consultas con cache 1h | ~720/mes |
+| Costo estimado | ~$12 USD (gratis) |
+
+---
+
+## Place ID
+
+El Place ID de MarLo Cookies está configurado en:
+`frontend/src/app/api/google-reviews/route.ts`
+
+```typescript
+const PLACE_ID = 'ChIJ0aytMAAVdZURRe6OeAMz7D4';
+```
+
+Para encontrar otro Place ID:
+1. Ve a [Place ID Finder](https://developers.google.com/maps/documentation/javascript/examples/places-placeid-finder)
+2. Busca tu negocio
+3. Copia el Place ID
+
+---
+
+## Verificar Funcionamiento
+
+Endpoint: `GET /api/google-reviews`
+
+Respuesta:
+```json
+{
+  "rating": 4.9,
+  "reviews_count": 21,
+  "url": "https://www.google.com/maps/place/...",
+  "last_updated": "2024-12-23T10:30:00Z",
+  "cached": true,
+  "cache_expires_in": "45 minutos"
+}
+```
+
+---
+
+## Troubleshooting
+
+| Error | Solución |
+|-------|----------|
+| "API key no configurada" | Agregar GOOGLE_PLACES_API_KEY en Vercel y redesplegar |
+| "403 Forbidden" | Verificar restricciones de API key |
+| "400 Bad Request" | Verificar Place ID |
+| Valores no actualizan | Esperar 1 hora (cache) o redesplegar |
+
+---
+
+## Fallback Manual
+
+Si la API no está configurada, el sistema usa valores manuales de Supabase.
+Editar en: **Admin → Configuración → Google Reviews**
+
+---
+
+## Opción Alternativa: Elfsight Widget
 
 ### Desventajas:
 - ⚠️ Requiere API Key de Google

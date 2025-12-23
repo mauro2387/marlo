@@ -177,7 +177,7 @@ export default function Home() {
     loadFloatingImages();
   }, []);
 
-  // Cargar horarios y Google Reviews desde Supabase
+  // Cargar horarios desde Supabase
   useEffect(() => {
     const loadSiteSettings = async () => {
       try {
@@ -186,19 +186,33 @@ export default function Home() {
           if (data.business_hours) {
             setBusinessHours(data.business_hours);
           }
-          if (data.google_rating || data.google_reviews_count) {
-            setGoogleReviews({
-              rating: data.google_rating || 4.9,
-              count: data.google_reviews_count || 21,
-              url: data.google_reviews_url || googleReviews.url
-            });
-          }
         }
       } catch (err) {
         console.log('Usando configuraciones por defecto');
       }
     };
     loadSiteSettings();
+  }, []);
+
+  // Cargar Google Reviews desde la API de Google (tiempo real)
+  useEffect(() => {
+    const loadGoogleReviews = async () => {
+      try {
+        const response = await fetch('/api/google-reviews');
+        const data = await response.json();
+        if (data.rating && data.reviews_count) {
+          setGoogleReviews({
+            rating: data.rating,
+            count: data.reviews_count,
+            url: data.url || googleReviews.url
+          });
+          console.log('⭐ Google Reviews cargado:', data.rating, 'estrellas,', data.reviews_count, 'reseñas', data.cached ? '(cache)' : '(live)');
+        }
+      } catch (err) {
+        console.log('Usando Google Reviews por defecto');
+      }
+    };
+    loadGoogleReviews();
   }, []);
 
   // Cargar tarjetas destacadas desde Supabase

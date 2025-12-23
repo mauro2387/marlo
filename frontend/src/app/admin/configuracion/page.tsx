@@ -1037,7 +1037,7 @@ export default function ConfiguracionPage() {
       <div className="bg-white rounded-xl shadow-md p-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-            ⭐ Google Reviews
+            ⭐ Google Reviews (API en Tiempo Real)
           </h3>
           <a 
             href="https://www.google.com/search?q=marlo+cookies"
@@ -1050,15 +1050,17 @@ export default function ConfiguracionPage() {
           </a>
         </div>
         
-        <p className="text-sm text-gray-500 mb-6">
-          💡 <strong>Actualización manual:</strong> Google no ofrece API gratuita para reseñas. 
-          Actualiza estos valores cuando veas cambios en tu perfil de Google Business.
-        </p>
+        <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+          <p className="text-sm text-green-700">
+            ✅ <strong>Actualización automática:</strong> Las reseñas se obtienen directamente de Google Places API 
+            y se actualizan cada hora. Los valores manuales solo se usan como fallback si la API no está configurada.
+          </p>
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              ⭐ Rating (1.0 - 5.0)
+              ⭐ Rating (fallback)
             </label>
             <input
               type="number"
@@ -1073,7 +1075,7 @@ export default function ConfiguracionPage() {
           
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              📝 Cantidad de Reseñas
+              📝 Cantidad (fallback)
             </label>
             <input
               type="number"
@@ -1093,14 +1095,14 @@ export default function ConfiguracionPage() {
               value={googleReviews.url}
               onChange={(e) => setGoogleReviews(prev => ({ ...prev, url: e.target.value }))}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-xs"
-              placeholder="https://www.google.com/search?..."
+              placeholder="https://www.google.com/maps/place/..."
             />
           </div>
         </div>
 
         {/* Preview */}
         <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
-          <p className="text-sm text-gray-600 mb-2">Vista previa:</p>
+          <p className="text-sm text-gray-600 mb-2">Vista previa (valores de fallback):</p>
           <div className="flex items-center gap-3">
             <div className="flex gap-0.5">
               {[...Array(5)].map((_, i) => (
@@ -1120,7 +1122,7 @@ export default function ConfiguracionPage() {
           className="mt-4 px-6 py-2 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 disabled:opacity-50 flex items-center gap-2"
         >
           <span className="material-icons text-sm">save</span>
-          {saving === 'google' ? 'Guardando...' : 'Guardar'}
+          {saving === 'google' ? 'Guardando...' : 'Guardar Fallback'}
         </button>
       </div>
 
