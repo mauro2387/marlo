@@ -2,47 +2,55 @@
 
 import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
-import Link from 'next/link';
 import { deliveryZonesGeoDB } from '@/lib/supabase-fetch';
-import type { DeliveryZoneGeo } from '@/components/DeliveryZoneEditor';
 
-// Importar editor dinámicamente para evitar SSR
-const DeliveryZoneEditor = dynamic(
-  () => import('@/components/DeliveryZoneEditor'),
+// Importar mapa dinámicamente
+const MapaZonas = dynamic(
+  () => import('@/components/MapaZonasEditor'),
   { 
     ssr: false,
     loading: () => (
       <div className="bg-gray-100 rounded-lg flex items-center justify-center" style={{ height: '500px' }}>
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-500 mx-auto mb-2"></div>
-          <p className="text-gray-600 text-sm">Cargando editor...</p>
+          <p className="text-gray-600 text-sm">Cargando mapa...</p>
         </div>
       </div>
     )
   }
 );
 
-const COLORES_DISPONIBLES = [
-  '#22C55E', // Verde
-  '#3B82F6', // Azul
-  '#F59E0B', // Amarillo
-  '#EF4444', // Rojo
-  '#8B5CF6', // Violeta
-  '#EC4899', // Rosa
-  '#06B6D4', // Cyan
-  '#F97316', // Naranja
+interface Zona {
+  id?: string;
+  nombre: string;
+  color: string;
+  precio: number;
+  tiempo_estimado: string;
+  activo: boolean;
+  orden: number;
+  poligono: [number, number][];
+}
+
+const COLORES = [
+  { nombre: 'Verde', valor: '#22C55E' },
+  { nombre: 'Azul', valor: '#3B82F6' },
+  { nombre: 'Amarillo', valor: '#F59E0B' },
+  { nombre: 'Rojo', valor: '#EF4444' },
+  { nombre: 'Violeta', valor: '#8B5CF6' },
+  { nombre: 'Rosa', valor: '#EC4899' },
+  { nombre: 'Cyan', valor: '#06B6D4' },
+  { nombre: 'Naranja', valor: '#F97316' },
 ];
 
-export default function AdminZonasPage() {
-  const [zones, setZones] = useState<DeliveryZoneGeo[]>([]);
+export default function ZonasDeliveryPage() {
+  const [zonas, setZonas] = useState<Zona[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [isDrawing, setIsDrawing] = useState(false);
-  const [selectedZone, setSelectedZone] = useState<DeliveryZoneGeo | null>(null);
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-
-  // Formulario para nueva zona
-  const [newZone, setNewZone] = useState<Partial<DeliveryZoneGeo>>({
+  const [mensaje, setMensaje] = useState<{ tipo: 'success' | 'error'; texto: string } | null>(null);
+  
+  // Estado para nueva zona
+  const [modoCrear, setModoCrear] = useState(false);
+  const [nuevaZona, setNuevaZona] = useState<Zona>({
     nombre: '',
     color: '#3B82F6',
     precio: 100,
@@ -51,468 +59,413 @@ export default function AdminZonasPage() {
     orden: 0,
     poligono: []
   });
+  
+  // Zona seleccionada para editar
+  const [zonaEditando, setZonaEditando] = useState<Zona | null>(null);
 
   useEffect(() => {
-    loadZones();
+    cargarZonas();
   }, []);
 
-  const loadZones = async () => {
+  const cargarZonas = async () => {
     setLoading(true);
     try {
       const { data, error } = await deliveryZonesGeoDB.getAll();
       if (error) throw error;
-      setZones(data || []);
+      setZonas(data || []);
     } catch (error) {
-      console.error('Error cargando zonas:', error);
-      setMessage({ type: 'error', text: 'Error al cargar las zonas' });
+      console.error('Error:', error);
+      setMensaje({ tipo: 'error', texto: 'Error al cargar zonas' });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleZoneClick = (zone: DeliveryZoneGeo) => {
-    setSelectedZone(zone);
-    setIsDrawing(false);
+  const handlePoligonoCreado = (coords: [number, number][]) => {
+    setNuevaZona(prev => ({ ...prev, poligono: coords }));
   };
 
-  const handlePolygonComplete = async (coordinates: [number, number][]) => {
-    if (!newZone.nombre) {
-      setMessage({ type: 'error', text: 'Ingresa un nombre para la zona antes de dibujar' });
+  const handlePoligonoEditado = (coords: [number, number][]) => {
+    if (zonaEditando) {
+      setZonaEditando({ ...zonaEditando, poligono: coords });
+    }
+  };
+
+  const guardarNuevaZona = async () => {
+    if (!nuevaZona.nombre.trim()) {
+      setMensaje({ tipo: 'error', texto: 'Ingresa un nombre para la zona' });
+      return;
+    }
+    if (nuevaZona.poligono.length < 3) {
+      setMensaje({ tipo: 'error', texto: 'Dibuja un área en el mapa (mínimo 3 puntos)' });
       return;
     }
 
-    const zoneToSave = {
-      ...newZone,
-      poligono: coordinates
-    };
-
     setSaving(true);
     try {
-      const { data, error } = await deliveryZonesGeoDB.create(zoneToSave);
-
+      const { data, error } = await deliveryZonesGeoDB.create({
+        ...nuevaZona,
+        orden: zonas.length + 1
+      });
       if (error) throw error;
-
-      setZones(prev => [...prev, data]);
-      setIsDrawing(false);
-      setNewZone({
+      
+      setZonas(prev => [...prev, data]);
+      setModoCrear(false);
+      setNuevaZona({
         nombre: '',
-        color: COLORES_DISPONIBLES[(zones.length + 1) % COLORES_DISPONIBLES.length],
+        color: COLORES[(zonas.length + 1) % COLORES.length].valor,
         precio: 100,
         tiempo_estimado: '30-60 min',
         activo: true,
-        orden: zones.length + 1,
+        orden: 0,
         poligono: []
       });
-      setMessage({ type: 'success', text: `Zona "${data.nombre}" creada correctamente` });
+      setMensaje({ tipo: 'success', texto: `Zona "${data.nombre}" guardada correctamente` });
     } catch (error) {
-      console.error('Error guardando zona:', error);
-      setMessage({ type: 'error', text: 'Error al guardar la zona' });
+      console.error('Error:', error);
+      setMensaje({ tipo: 'error', texto: 'Error al guardar la zona' });
     } finally {
       setSaving(false);
     }
   };
 
-  const handlePolygonUpdate = async (zoneId: string, coordinates: [number, number][]) => {
-    try {
-      const { error } = await deliveryZonesGeoDB.update(zoneId, { poligono: coordinates });
-
-      if (error) throw error;
-
-      setZones(prev => prev.map(z => 
-        z.id === zoneId ? { ...z, poligono: coordinates } : z
-      ));
-    } catch (error) {
-      console.error('Error actualizando polígono:', error);
-    }
-  };
-
-  const handleUpdateZone = async () => {
-    if (!selectedZone?.id) return;
+  const guardarEdicion = async () => {
+    if (!zonaEditando?.id) return;
 
     setSaving(true);
     try {
-      const { error } = await deliveryZonesGeoDB.update(selectedZone.id, {
-        nombre: selectedZone.nombre,
-        color: selectedZone.color,
-        precio: selectedZone.precio,
-        tiempo_estimado: selectedZone.tiempo_estimado,
-        activo: selectedZone.activo,
-        orden: selectedZone.orden
+      const { error } = await deliveryZonesGeoDB.update(zonaEditando.id, {
+        nombre: zonaEditando.nombre,
+        color: zonaEditando.color,
+        precio: zonaEditando.precio,
+        tiempo_estimado: zonaEditando.tiempo_estimado,
+        activo: zonaEditando.activo,
+        poligono: zonaEditando.poligono
       });
-
       if (error) throw error;
-
-      setZones(prev => prev.map(z => 
-        z.id === selectedZone.id ? selectedZone : z
-      ));
-      setMessage({ type: 'success', text: 'Zona actualizada correctamente' });
+      
+      setZonas(prev => prev.map(z => z.id === zonaEditando.id ? zonaEditando : z));
+      setZonaEditando(null);
+      setMensaje({ tipo: 'success', texto: 'Zona actualizada' });
     } catch (error) {
-      console.error('Error actualizando zona:', error);
-      setMessage({ type: 'error', text: 'Error al actualizar la zona' });
+      console.error('Error:', error);
+      setMensaje({ tipo: 'error', texto: 'Error al actualizar' });
     } finally {
       setSaving(false);
     }
   };
 
-  const handleDeleteZone = async () => {
-    if (!selectedZone?.id) return;
-    
-    if (!confirm(`¿Eliminar la zona "${selectedZone.nombre}"?`)) return;
+  const eliminarZona = async (zona: Zona) => {
+    if (!zona.id) return;
+    if (!confirm(`¿Eliminar la zona "${zona.nombre}"?`)) return;
 
-    setSaving(true);
     try {
-      const { error } = await deliveryZonesGeoDB.delete(selectedZone.id);
-
+      const { error } = await deliveryZonesGeoDB.delete(zona.id);
       if (error) throw error;
-
-      setZones(prev => prev.filter(z => z.id !== selectedZone.id));
-      setSelectedZone(null);
-      setMessage({ type: 'success', text: 'Zona eliminada correctamente' });
+      
+      setZonas(prev => prev.filter(z => z.id !== zona.id));
+      if (zonaEditando?.id === zona.id) setZonaEditando(null);
+      setMensaje({ tipo: 'success', texto: 'Zona eliminada' });
     } catch (error) {
-      console.error('Error eliminando zona:', error);
-      setMessage({ type: 'error', text: 'Error al eliminar la zona' });
-    } finally {
-      setSaving(false);
+      console.error('Error:', error);
+      setMensaje({ tipo: 'error', texto: 'Error al eliminar' });
     }
-  };
-
-  const startDrawing = () => {
-    setSelectedZone(null);
-    setIsDrawing(true);
-  };
-
-  const cancelDrawing = () => {
-    setIsDrawing(false);
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">Cargando zonas de delivery...</p>
+          <p className="text-gray-600">Cargando zonas...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="space-y-6">
       {/* Header */}
-      <header className="bg-white shadow-sm sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Link href="/admin" className="text-gray-600 hover:text-gray-900">
-                <span className="material-icons">arrow_back</span>
-              </Link>
-              <div>
-                <h1 className="text-xl font-bold text-gray-900">Zonas de Delivery</h1>
-                <p className="text-sm text-gray-500">Dibuja y configura las zonas de envío</p>
-              </div>
-            </div>
-            
-            {!isDrawing ? (
-              <button
-                onClick={startDrawing}
-                className="flex items-center gap-2 px-4 py-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600 transition-colors"
-              >
-                <span className="material-icons text-sm">add</span>
-                Nueva Zona
-              </button>
-            ) : (
-              <button
-                onClick={cancelDrawing}
-                className="flex items-center gap-2 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
-              >
-                <span className="material-icons text-sm">close</span>
-                Cancelar
-              </button>
-            )}
-          </div>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Zonas de Delivery</h1>
+          <p className="text-gray-600">Dibuja las zonas en el mapa y asigna precios</p>
         </div>
-      </header>
+        {!modoCrear && !zonaEditando && (
+          <button
+            onClick={() => setModoCrear(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600 transition-colors"
+          >
+            <span className="material-icons">add</span>
+            Nueva Zona
+          </button>
+        )}
+      </div>
 
       {/* Mensaje */}
-      {message && (
-        <div className={`mx-4 mt-4 p-4 rounded-lg ${
-          message.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'
+      {mensaje && (
+        <div className={`p-4 rounded-lg flex items-center justify-between ${
+          mensaje.tipo === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'
         }`}>
-          <div className="flex items-center justify-between">
-            <span>{message.text}</span>
-            <button onClick={() => setMessage(null)} className="text-current hover:opacity-70">
-              <span className="material-icons text-sm">close</span>
-            </button>
-          </div>
+          <span>{mensaje.texto}</span>
+          <button onClick={() => setMensaje(null)} className="hover:opacity-70">✕</button>
         </div>
       )}
 
-      <main className="max-w-7xl mx-auto px-4 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Editor de mapa */}
-          <div className="lg:col-span-2">
-            <div className="bg-white rounded-xl shadow-sm p-4">
-              <DeliveryZoneEditor
-                zones={zones}
-                selectedZoneId={selectedZone?.id}
-                isDrawing={isDrawing}
-                onZoneClick={handleZoneClick}
-                onPolygonComplete={handlePolygonComplete}
-                onPolygonUpdate={handlePolygonUpdate}
-              />
-            </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Mapa */}
+        <div className="lg:col-span-2">
+          <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+            <MapaZonas
+              zonas={zonas}
+              zonaEditando={zonaEditando}
+              modoCrear={modoCrear}
+              colorNuevaZona={modoCrear ? nuevaZona.color : undefined}
+              onPoligonoCreado={handlePoligonoCreado}
+              onPoligonoEditado={handlePoligonoEditado}
+              onZonaClick={(zona) => {
+                if (!modoCrear) {
+                  setZonaEditando(zona);
+                }
+              }}
+            />
           </div>
+        </div>
 
-          {/* Panel lateral */}
-          <div className="space-y-4">
-            {/* Formulario nueva zona (cuando está dibujando) */}
-            {isDrawing && (
-              <div className="bg-white rounded-xl shadow-sm p-4">
-                <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
-                  <span className="material-icons text-pink-500">add_circle</span>
-                  Nueva Zona
-                </h3>
-                
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Nombre de la zona *
-                    </label>
-                    <input
-                      type="text"
-                      value={newZone.nombre}
-                      onChange={(e) => setNewZone(prev => ({ ...prev, nombre: e.target.value }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-300 focus:border-pink-400"
-                      placeholder="Ej: Centro, Punta del Este..."
-                    />
-                  </div>
+        {/* Panel lateral */}
+        <div className="space-y-4">
+          {/* Formulario Nueva Zona */}
+          {modoCrear && (
+            <div className="bg-white rounded-xl shadow-sm p-4">
+              <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <span className="material-icons text-pink-500">add_circle</span>
+                Nueva Zona
+              </h3>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Nombre *</label>
+                  <input
+                    type="text"
+                    value={nuevaZona.nombre}
+                    onChange={(e) => setNuevaZona(prev => ({ ...prev, nombre: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-300"
+                    placeholder="Ej: Centro, Punta del Este..."
+                  />
+                </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Color
-                    </label>
-                    <div className="flex flex-wrap gap-2">
-                      {COLORES_DISPONIBLES.map(color => (
-                        <button
-                          key={color}
-                          onClick={() => setNewZone(prev => ({ ...prev, color }))}
-                          className={`w-8 h-8 rounded-full transition-transform ${
-                            newZone.color === color ? 'ring-2 ring-offset-2 ring-pink-500 scale-110' : ''
-                          }`}
-                          style={{ backgroundColor: color }}
-                        />
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Precio $
-                      </label>
-                      <input
-                        type="number"
-                        value={newZone.precio}
-                        onChange={(e) => setNewZone(prev => ({ ...prev, precio: Number(e.target.value) }))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-300 focus:border-pink-400"
-                        min="0"
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Color</label>
+                  <div className="flex flex-wrap gap-2">
+                    {COLORES.map(c => (
+                      <button
+                        key={c.valor}
+                        onClick={() => setNuevaZona(prev => ({ ...prev, color: c.valor }))}
+                        className={`w-8 h-8 rounded-full border-2 transition-transform ${
+                          nuevaZona.color === c.valor ? 'border-gray-800 scale-110' : 'border-transparent'
+                        }`}
+                        style={{ backgroundColor: c.valor }}
+                        title={c.nombre}
                       />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Tiempo
-                      </label>
-                      <input
-                        type="text"
-                        value={newZone.tiempo_estimado}
-                        onChange={(e) => setNewZone(prev => ({ ...prev, tiempo_estimado: e.target.value }))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-300 focus:border-pink-400"
-                        placeholder="30-60 min"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-700">
-                    <p className="font-medium mb-1">📍 Instrucciones:</p>
-                    <ol className="list-decimal list-inside space-y-1">
-                      <li>Completa el nombre y precio</li>
-                      <li>Haz clic en el mapa para agregar puntos</li>
-                      <li>Doble clic para cerrar el polígono</li>
-                    </ol>
+                    ))}
                   </div>
                 </div>
-              </div>
-            )}
 
-            {/* Editar zona seleccionada */}
-            {selectedZone && !isDrawing && (
-              <div className="bg-white rounded-xl shadow-sm p-4">
-                <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
-                  <span 
-                    className="w-4 h-4 rounded-full"
-                    style={{ backgroundColor: selectedZone.color }}
-                  />
-                  Editar Zona
-                </h3>
-                
-                <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Nombre
-                    </label>
-                    <input
-                      type="text"
-                      value={selectedZone.nombre}
-                      onChange={(e) => setSelectedZone(prev => prev ? { ...prev, nombre: e.target.value } : null)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-300 focus:border-pink-400"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Color
-                    </label>
-                    <div className="flex flex-wrap gap-2">
-                      {COLORES_DISPONIBLES.map(color => (
-                        <button
-                          key={color}
-                          onClick={() => setSelectedZone(prev => prev ? { ...prev, color } : null)}
-                          className={`w-8 h-8 rounded-full transition-transform ${
-                            selectedZone.color === color ? 'ring-2 ring-offset-2 ring-pink-500 scale-110' : ''
-                          }`}
-                          style={{ backgroundColor: color }}
-                        />
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Precio $
-                      </label>
-                      <input
-                        type="number"
-                        value={selectedZone.precio}
-                        onChange={(e) => setSelectedZone(prev => prev ? { ...prev, precio: Number(e.target.value) } : null)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-300 focus:border-pink-400"
-                        min="0"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Tiempo
-                      </label>
-                      <input
-                        type="text"
-                        value={selectedZone.tiempo_estimado}
-                        onChange={(e) => setSelectedZone(prev => prev ? { ...prev, tiempo_estimado: e.target.value } : null)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-300 focus:border-pink-400"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Prioridad (menor = mayor prioridad)
-                    </label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Precio $</label>
                     <input
                       type="number"
-                      value={selectedZone.orden}
-                      onChange={(e) => setSelectedZone(prev => prev ? { ...prev, orden: Number(e.target.value) } : null)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-300 focus:border-pink-400"
+                      value={nuevaZona.precio}
+                      onChange={(e) => setNuevaZona(prev => ({ ...prev, precio: Number(e.target.value) }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                       min="0"
                     />
                   </div>
-
-                  <div className="flex items-center gap-2">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Tiempo</label>
                     <input
-                      type="checkbox"
-                      id="activo"
-                      checked={selectedZone.activo}
-                      onChange={(e) => setSelectedZone(prev => prev ? { ...prev, activo: e.target.checked } : null)}
-                      className="rounded border-gray-300 text-pink-500 focus:ring-pink-500"
+                      type="text"
+                      value={nuevaZona.tiempo_estimado}
+                      onChange={(e) => setNuevaZona(prev => ({ ...prev, tiempo_estimado: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                      placeholder="30-60 min"
                     />
-                    <label htmlFor="activo" className="text-sm text-gray-700">
-                      Zona activa
-                    </label>
-                  </div>
-
-                  <div className="flex gap-2 pt-2">
-                    <button
-                      onClick={handleUpdateZone}
-                      disabled={saving}
-                      className="flex-1 px-4 py-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600 disabled:bg-gray-300 transition-colors"
-                    >
-                      {saving ? 'Guardando...' : 'Guardar'}
-                    </button>
-                    <button
-                      onClick={handleDeleteZone}
-                      disabled={saving}
-                      className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:bg-gray-300 transition-colors"
-                    >
-                      <span className="material-icons text-sm">delete</span>
-                    </button>
                   </div>
                 </div>
-              </div>
-            )}
 
-            {/* Lista de zonas */}
+                {/* Instrucciones */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm">
+                  <p className="font-medium text-blue-800 mb-1">📍 Cómo dibujar:</p>
+                  <ol className="text-blue-700 space-y-1 list-decimal list-inside">
+                    <li>Haz clic en el mapa para agregar puntos</li>
+                    <li>Cierra el área haciendo clic en el primer punto</li>
+                    <li>Presiona "Guardar Zona" cuando termines</li>
+                  </ol>
+                </div>
+
+                {nuevaZona.poligono.length > 0 && (
+                  <p className="text-sm text-green-600">
+                    ✓ Área dibujada con {nuevaZona.poligono.length} puntos
+                  </p>
+                )}
+
+                <div className="flex gap-2 pt-2">
+                  <button
+                    onClick={guardarNuevaZona}
+                    disabled={saving}
+                    className="flex-1 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:bg-gray-300 font-medium"
+                  >
+                    {saving ? 'Guardando...' : '💾 Guardar Zona'}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setModoCrear(false);
+                      setNuevaZona(prev => ({ ...prev, poligono: [] }));
+                    }}
+                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Formulario Editar Zona */}
+          {zonaEditando && !modoCrear && (
             <div className="bg-white rounded-xl shadow-sm p-4">
-              <h3 className="font-bold text-gray-900 mb-4">
-                Zonas configuradas ({zones.length})
+              <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <span className="w-4 h-4 rounded-full" style={{ backgroundColor: zonaEditando.color }} />
+                Editar Zona
               </h3>
               
-              <div className="space-y-2">
-                {zones.length === 0 ? (
-                  <p className="text-gray-500 text-sm text-center py-4">
-                    No hay zonas configuradas.<br/>
-                    Haz clic en "Nueva Zona" para crear una.
-                  </p>
-                ) : (
-                  zones.map(zone => (
-                    <button
-                      key={zone.id}
-                      onClick={() => handleZoneClick(zone)}
-                      className={`w-full flex items-center gap-3 p-3 rounded-lg border transition-all text-left ${
-                        selectedZone?.id === zone.id 
-                          ? 'border-pink-500 bg-pink-50' 
-                          : 'border-gray-200 hover:bg-gray-50'
-                      } ${!zone.activo ? 'opacity-50' : ''}`}
-                    >
-                      <span 
-                        className="w-4 h-4 rounded-full flex-shrink-0"
-                        style={{ backgroundColor: zone.color }}
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
+                  <input
+                    type="text"
+                    value={zonaEditando.nombre}
+                    onChange={(e) => setZonaEditando(prev => prev ? { ...prev, nombre: e.target.value } : null)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Color</label>
+                  <div className="flex flex-wrap gap-2">
+                    {COLORES.map(c => (
+                      <button
+                        key={c.valor}
+                        onClick={() => setZonaEditando(prev => prev ? { ...prev, color: c.valor } : null)}
+                        className={`w-8 h-8 rounded-full border-2 transition-transform ${
+                          zonaEditando.color === c.valor ? 'border-gray-800 scale-110' : 'border-transparent'
+                        }`}
+                        style={{ backgroundColor: c.valor }}
                       />
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-gray-900 truncate">{zone.nombre}</p>
-                        <p className="text-sm text-gray-500">{zone.tiempo_estimado}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-bold text-gray-900">${zone.precio}</p>
-                        {!zone.activo && (
-                          <span className="text-xs text-gray-400">Inactiva</span>
-                        )}
-                      </div>
-                    </button>
-                  ))
-                )}
+                    ))}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Precio $</label>
+                    <input
+                      type="number"
+                      value={zonaEditando.precio}
+                      onChange={(e) => setZonaEditando(prev => prev ? { ...prev, precio: Number(e.target.value) } : null)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                      min="0"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Tiempo</label>
+                    <input
+                      type="text"
+                      value={zonaEditando.tiempo_estimado}
+                      onChange={(e) => setZonaEditando(prev => prev ? { ...prev, tiempo_estimado: e.target.value } : null)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="activo"
+                    checked={zonaEditando.activo}
+                    onChange={(e) => setZonaEditando(prev => prev ? { ...prev, activo: e.target.checked } : null)}
+                    className="rounded"
+                  />
+                  <label htmlFor="activo" className="text-sm text-gray-700">Zona activa</label>
+                </div>
+
+                <div className="flex gap-2 pt-2">
+                  <button
+                    onClick={guardarEdicion}
+                    disabled={saving}
+                    className="flex-1 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:bg-gray-300 font-medium"
+                  >
+                    {saving ? 'Guardando...' : '💾 Guardar Cambios'}
+                  </button>
+                  <button
+                    onClick={() => eliminarZona(zonaEditando)}
+                    className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                  >
+                    🗑️
+                  </button>
+                </div>
+                <button
+                  onClick={() => setZonaEditando(null)}
+                  className="w-full px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+                >
+                  Cancelar
+                </button>
               </div>
             </div>
+          )}
 
-            {/* Info */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-700">
-              <p className="font-medium mb-2">💡 Tips:</p>
-              <ul className="space-y-1">
-                <li>• Las zonas con menor número de orden tienen prioridad</li>
-                <li>• Puedes arrastrar los puntos de una zona seleccionada</li>
-                <li>• El cliente verá el precio automáticamente según su ubicación</li>
-              </ul>
-            </div>
+          {/* Lista de zonas */}
+          <div className="bg-white rounded-xl shadow-sm p-4">
+            <h3 className="font-bold text-gray-900 mb-3">
+              Zonas ({zonas.length})
+            </h3>
+            
+            {zonas.length === 0 ? (
+              <p className="text-gray-500 text-sm text-center py-4">
+                No hay zonas. Haz clic en "Nueva Zona" para crear una.
+              </p>
+            ) : (
+              <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                {zonas.map(zona => (
+                  <button
+                    key={zona.id}
+                    onClick={() => !modoCrear && setZonaEditando(zona)}
+                    disabled={modoCrear}
+                    className={`w-full flex items-center gap-3 p-3 rounded-lg border text-left transition-all ${
+                      zonaEditando?.id === zona.id 
+                        ? 'border-pink-500 bg-pink-50' 
+                        : 'border-gray-200 hover:bg-gray-50'
+                    } ${!zona.activo ? 'opacity-50' : ''} ${modoCrear ? 'cursor-not-allowed' : ''}`}
+                  >
+                    <span 
+                      className="w-4 h-4 rounded-full flex-shrink-0"
+                      style={{ backgroundColor: zona.color }}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-gray-900 truncate">{zona.nombre}</p>
+                      <p className="text-xs text-gray-500">{zona.tiempo_estimado}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-bold text-gray-900">${zona.precio}</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 }
