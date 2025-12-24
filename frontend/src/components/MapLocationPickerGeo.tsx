@@ -1,11 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Polygon, useMapEvents, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
-// Fix para el ícono del marcador en Leaflet
+// Fix para iconos de Leaflet
 if (typeof window !== 'undefined') {
   delete (L.Icon.Default.prototype as any)._getIconUrl;
   L.Icon.Default.mergeOptions({
@@ -15,86 +15,73 @@ if (typeof window !== 'undefined') {
   });
 }
 
-interface MapLocationPickerProps {
-  onLocationChange: (location: { lat: number; lng: number; address: string; zona?: string; mapsLink?: string }) => void;
+interface DeliveryZoneGeo {
+  id: string;
+  nombre: string;
+  color: string;
+  precio: number;
+  tiempo_estimado: string;
+  activo: boolean;
+  poligono: [number, number][];
+}
+
+interface MapLocationPickerGeoProps {
+  zones: DeliveryZoneGeo[];
+  onLocationChange: (location: { 
+    lat: number; 
+    lng: number; 
+    address: string; 
+    zona?: string;
+    zonaPrecio?: number;
+    zonaTiempo?: string;
+    zonaColor?: string;
+    mapsLink?: string;
+    fueraDeZona?: boolean;
+  }) => void;
   initialLat?: number;
   initialLng?: number;
   className?: string;
 }
 
-// Zonas de Maldonado con sus límites aproximados (radios ampliados)
-const ZONAS_MALDONADO = [
-  // Zona central - Maldonado/San Carlos (radio grande ~15km)
-  { name: 'Maldonado', lat: -34.90, lng: -54.96, radius: 15 },
-  { name: 'San Carlos', lat: -34.80, lng: -54.91, radius: 12 },
+// Algoritmo Ray Casting para detectar si un punto está dentro de un polígono
+function pointInPolygon(lat: number, lng: number, polygon: [number, number][]): boolean {
+  let inside = false;
+  const n = polygon.length;
   
-  // Zona Punta del Este / Península (radio ~10km)
-  { name: 'Punta del Este', lat: -34.96, lng: -54.94, radius: 10 },
-  { name: 'Península', lat: -34.97, lng: -54.95, radius: 8 },
-  
-  // Zona costera este (radio ampliado ~15km)
-  { name: 'La Barra', lat: -34.87, lng: -54.77, radius: 12 },
-  { name: 'Manantiales', lat: -34.85, lng: -54.73, radius: 10 },
-  { name: 'José Ignacio', lat: -34.83, lng: -54.62, radius: 15 },
-  { name: 'Garzón', lat: -34.78, lng: -54.55, radius: 12 },
-  
-  // Zonas norte
-  { name: 'Piriápolis', lat: -34.86, lng: -55.28, radius: 10 },
-  { name: 'Pan de Azúcar', lat: -34.79, lng: -55.23, radius: 10 },
-  { name: 'Aiguá', lat: -34.20, lng: -54.77, radius: 15 },
-  
-  // Zonas intermedias
-  { name: 'Balneario Buenos Aires', lat: -34.88, lng: -54.87, radius: 8 },
-  { name: 'Pinares', lat: -34.91, lng: -54.90, radius: 8 },
-  { name: 'Beverly Hills', lat: -34.89, lng: -54.83, radius: 8 },
-];
-
-// Función para calcular distancia entre dos puntos (fórmula de Haversine)
-function calcularDistancia(lat1: number, lng1: number, lat2: number, lng2: number): number {
-  const R = 6371; // Radio de la Tierra en km
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLng = (lng2 - lng1) * Math.PI / 180;
-  const a = 
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-    Math.sin(dLng / 2) * Math.sin(dLng / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
-}
-
-// Detectar zona basado en coordenadas
-function detectarZona(lat: number, lng: number): string {
-  let zonaMasCercana = 'Otro';
-  let distanciaMinima = Infinity;
-
-  for (const zona of ZONAS_MALDONADO) {
-    const distancia = calcularDistancia(lat, lng, zona.lat, zona.lng);
-    if (distancia < zona.radius && distancia < distanciaMinima) {
-      distanciaMinima = distancia;
-      zonaMasCercana = zona.name;
+  for (let i = 0, j = n - 1; i < n; j = i++) {
+    const xi = polygon[i][0], yi = polygon[i][1];
+    const xj = polygon[j][0], yj = polygon[j][1];
+    
+    if (((yi > lng) !== (yj > lng)) && (lat < (xj - xi) * (lng - yi) / (yj - yi) + xi)) {
+      inside = !inside;
     }
   }
-
-  return zonaMasCercana;
+  
+  return inside;
 }
 
-// Geocodificación inversa usando Nominatim (OpenStreetMap)
+// Detectar zona basado en polígonos
+function detectarZonaGeo(lat: number, lng: number, zones: DeliveryZoneGeo[]): DeliveryZoneGeo | null {
+  for (const zone of zones) {
+    if (!zone.activo) continue;
+    if (pointInPolygon(lat, lng, zone.poligono)) {
+      return zone;
+    }
+  }
+  return null;
+}
+
+// Geocodificación inversa usando Nominatim
 async function reverseGeocode(lat: number, lng: number): Promise<string> {
   try {
     const response = await fetch(
       `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
-      {
-        headers: {
-          'User-Agent': 'MarloCookies'
-        }
-      }
+      { headers: { 'User-Agent': 'MarloCookies' } }
     );
     
     if (!response.ok) throw new Error('Geocoding failed');
     
     const data = await response.json();
-    
-    // Construir dirección desde los componentes
     const address = data.address;
     const parts = [];
     
@@ -120,20 +107,40 @@ function MapClickHandler({ onLocationChange }: { onLocationChange: (lat: number,
   return null;
 }
 
-export default function MapLocationPicker({ 
+// Componente para mostrar las zonas en el mapa
+function ZonePolygons({ zones, selectedZone }: { zones: DeliveryZoneGeo[]; selectedZone?: string }) {
+  return (
+    <>
+      {zones.filter(z => z.activo).map(zone => (
+        <Polygon
+          key={zone.id}
+          positions={zone.poligono.map(p => [p[0], p[1]] as L.LatLngExpression)}
+          pathOptions={{
+            color: zone.color,
+            fillColor: zone.color,
+            fillOpacity: selectedZone === zone.nombre ? 0.4 : 0.2,
+            weight: selectedZone === zone.nombre ? 3 : 2
+          }}
+        />
+      ))}
+    </>
+  );
+}
+
+export default function MapLocationPickerGeo({ 
+  zones,
   onLocationChange, 
   initialLat = -34.9, 
   initialLng = -54.95,
   className = '' 
-}: MapLocationPickerProps) {
+}: MapLocationPickerGeoProps) {
   const [position, setPosition] = useState<[number, number]>([initialLat, initialLng]);
   const [loading, setLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [selectedZone, setSelectedZone] = useState<string | undefined>();
 
   useEffect(() => {
     setMounted(true);
-    // Obtener dirección inicial
-    handleLocationChange(initialLat, initialLng);
   }, []);
 
   const handleLocationChange = async (lat: number, lng: number) => {
@@ -142,27 +149,38 @@ export default function MapLocationPicker({
     
     try {
       const address = await reverseGeocode(lat, lng);
-      const zona = detectarZona(lat, lng);
+      const zone = detectarZonaGeo(lat, lng, zones);
       const mapsLink = `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=18/${lat}/${lng}`;
+      
+      setSelectedZone(zone?.nombre);
       
       onLocationChange({
         lat,
         lng,
         address,
-        zona,
-        mapsLink
+        zona: zone?.nombre || 'Fuera de zona',
+        zonaPrecio: zone?.precio,
+        zonaTiempo: zone?.tiempo_estimado,
+        zonaColor: zone?.color,
+        mapsLink,
+        fueraDeZona: !zone
       });
     } catch (error) {
-      // Fallback si falla el geocoding
-      const zona = detectarZona(lat, lng);
+      const zone = detectarZonaGeo(lat, lng, zones);
       const mapsLink = `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=18/${lat}/${lng}`;
+      
+      setSelectedZone(zone?.nombre);
       
       onLocationChange({
         lat,
         lng,
-        address: `${zona} - Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)}`,
-        zona,
-        mapsLink
+        address: `Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)}`,
+        zona: zone?.nombre || 'Fuera de zona',
+        zonaPrecio: zone?.precio,
+        zonaTiempo: zone?.tiempo_estimado,
+        zonaColor: zone?.color,
+        mapsLink,
+        fueraDeZona: !zone
       });
     } finally {
       setLoading(false);
@@ -174,9 +192,7 @@ export default function MapLocationPicker({
       setLoading(true);
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          const lat = position.coords.latitude;
-          const lng = position.coords.longitude;
-          handleLocationChange(lat, lng);
+          handleLocationChange(position.coords.latitude, position.coords.longitude);
         },
         (err) => {
           console.error('Error al obtener ubicación:', err);
@@ -204,6 +220,7 @@ export default function MapLocationPicker({
 
   return (
     <div className={`space-y-3 ${className}`}>
+      {/* Botón ubicación */}
       <div className="flex gap-2">
         <button
           type="button"
@@ -222,10 +239,11 @@ export default function MapLocationPicker({
         </button>
       </div>
 
+      {/* Mapa */}
       <div className="relative bg-gray-100 rounded-lg overflow-hidden" style={{ height: '400px' }}>
         <MapContainer
           center={position}
-          zoom={13}
+          zoom={12}
           style={{ height: '100%', width: '100%' }}
           zoomControl={true}
         >
@@ -233,19 +251,44 @@ export default function MapLocationPicker({
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
+          
+          {/* Mostrar zonas */}
+          <ZonePolygons zones={zones} selectedZone={selectedZone} />
+          
+          {/* Marcador */}
           <Marker 
             position={position}
             draggable={true}
             eventHandlers={{
               dragend: (e) => {
                 const marker = e.target;
-                const position = marker.getLatLng();
-                handleLocationChange(position.lat, position.lng);
+                const pos = marker.getLatLng();
+                handleLocationChange(pos.lat, pos.lng);
               },
             }}
           />
           <MapClickHandler onLocationChange={handleLocationChange} />
         </MapContainer>
+      </div>
+
+      {/* Leyenda de zonas */}
+      <div className="flex flex-wrap gap-2">
+        {zones.filter(z => z.activo).map(zone => (
+          <div
+            key={zone.id}
+            className={`flex items-center gap-2 px-2 py-1 rounded-full text-xs ${
+              selectedZone === zone.nombre ? 'ring-2 ring-pink-500' : ''
+            }`}
+            style={{ backgroundColor: `${zone.color}20` }}
+          >
+            <span 
+              className="w-2 h-2 rounded-full"
+              style={{ backgroundColor: zone.color }}
+            />
+            <span>{zone.nombre}</span>
+            <span className="text-gray-600">${zone.precio}</span>
+          </div>
+        ))}
       </div>
 
       <div className="text-xs text-gray-500 text-center">

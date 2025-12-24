@@ -236,6 +236,45 @@ export const zonesDB = {
   },
 };
 
+// ==================== ZONAS GEOGRÁFICAS (POLÍGONOS) ====================
+export const deliveryZonesGeoDB = {
+  getAll: async () => {
+    return supabaseFetch<any[]>('delivery_zones_geo?select=*&order=orden');
+  },
+  
+  getActive: async () => {
+    return supabaseFetch<any[]>('delivery_zones_geo?select=*&activo=eq.true&order=orden');
+  },
+  
+  create: async (zone: any) => {
+    return supabaseFetch<any>('delivery_zones_geo', { 
+      method: 'POST', 
+      body: zone 
+    });
+  },
+  
+  update: async (id: string, updates: any) => {
+    return supabaseFetch<any>(`delivery_zones_geo?id=eq.${id}`, { 
+      method: 'PATCH', 
+      body: updates 
+    });
+  },
+  
+  delete: async (id: string) => {
+    return supabaseFetch<any>(`delivery_zones_geo?id=eq.${id}`, { 
+      method: 'DELETE'
+    });
+  },
+  
+  // Detectar zona usando la función de PostgreSQL
+  detectZone: async (lat: number, lng: number) => {
+    return supabaseFetch<any[]>(`rpc/detect_delivery_zone`, {
+      method: 'POST',
+      body: { p_lat: lat, p_lng: lng }
+    });
+  }
+};
+
 // ==================== ÓRDENES ====================
 export const ordersDB = {
   getAll: async () => {

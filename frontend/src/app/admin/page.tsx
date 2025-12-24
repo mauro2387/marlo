@@ -217,7 +217,15 @@ export default function AdminDashboard() {
               className="flex items-center gap-3 p-3 bg-cream-50 rounded-lg hover:bg-cream-100 transition-colors"
             >
               <span className="text-xl">🗺️</span>
-              <span>Configurar Zonas</span>
+              <span>Zonas (Tabla)</span>
+            </Link>
+            <Link
+              href="/admin/zonas-delivery"
+              className="flex items-center gap-3 p-3 bg-gradient-to-r from-pink-50 to-purple-50 rounded-lg hover:from-pink-100 hover:to-purple-100 transition-colors border border-pink-200"
+            >
+              <span className="text-xl">✏️</span>
+              <span>Zonas Visual</span>
+              <span className="ml-auto text-xs bg-pink-500 text-white px-2 py-0.5 rounded-full">Nuevo</span>
             </Link>
           </div>
         </div>
