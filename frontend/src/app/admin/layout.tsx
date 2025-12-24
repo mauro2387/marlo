@@ -14,6 +14,7 @@ const menuItems = [
   { href: '/admin/clientes', label: 'Clientes', icon: 'group' },
   { href: '/admin/cupones', label: 'Cupones', icon: 'confirmation_number' },
   { href: '/admin/zonas', label: 'Zonas Delivery', icon: 'local_shipping' },
+  { href: '/admin/zonas-delivery', label: 'Zonas Visual ✏️', icon: 'map' },
   { href: '/admin/banners', label: 'Banners', icon: 'campaign' },
   { href: '/admin/destacados', label: 'Destacados', icon: 'auto_awesome' },
   { href: '/admin/postulaciones', label: 'Postulaciones', icon: 'work' },
