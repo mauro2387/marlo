@@ -81,10 +81,10 @@ export interface Address {
 }
 
 // Estados de pedido
-export type OrderStatus = 'preparando' | 'en_camino' | 'entregado' | 'cancelado';
+export type OrderStatus = 'preparando' | 'listo' | 'en_camino' | 'entregado' | 'cancelado' | 'pendiente_pago';
 
 // Métodos de pago
-export type PaymentMethod = 'efectivo' | 'transferencia' | 'mercadopago';
+export type PaymentMethod = 'efectivo' | 'transferencia' | 'mercadopago' | 'puntos';
 
 // Historial de puntos
 export interface LoyaltyHistory {
@@ -99,13 +99,20 @@ export interface LoyaltyHistory {
 
 // Recompensa
 export interface Reward {
-  id: number;
+  id: string;
   nombre: string;
-  puntos: number;
-  descripcion: string;
-  icon: string;
-  disponible?: boolean;
-  destacado?: boolean;
+  puntos_requeridos: number;
+  descripcion?: string;
+  icono?: string;
+  imagen_url?: string;
+  categoria?: string;
+  tipo_recompensa?: 'producto' | 'cupon_descuento' | 'cupon_envio' | 'box_personalizable';
+  valor_descuento?: number;
+  cantidad_cookies?: number;
+  es_destacado?: boolean;
+  activo?: boolean;
+  stock?: number;
+  orden?: number;
 }
 
 // Notificación

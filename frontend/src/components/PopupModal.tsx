@@ -106,32 +106,22 @@ export default function PopupModal({ pagina }: PopupModalProps) {
     
     setSubscribing(true);
     try {
-      // Suscribir al newsletter
-      await subscribersDB.subscribe({
-        email
+      // Usar nueva API que maneja todo: suscripción + cupón + email
+      const response = await fetch('/api/newsletter/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email,
+          popupId: popup?.id,
+          generateCoupon: popup?.generar_cupon
+        })
       });
       
-      // Si el popup debe generar cupón, llamar a la función
-      if (popup?.generar_cupon) {
-        const { data: couponResult, error: couponError } = await popupsDB.generateCoupon(popup.id, email);
-        
-        if (!couponError && couponResult) {
-          setCouponCode(couponResult.coupon_code);
-          setCouponData(couponResult);
-          
-          // Enviar email con cupón
-          const { notificationService } = await import('@/lib/notifications');
-          await notificationService.notifyNewsletterSubscription({
-            email,
-            coupon: {
-              code: couponResult.coupon_code,
-              tipo: couponResult.tipo,
-              valor: couponResult.valor,
-              monto_minimo: couponResult.monto_minimo,
-              valido_hasta: couponResult.valido_hasta,
-            },
-          });
-        }
+      const result = await response.json();
+      
+      if (result.coupon) {
+        setCouponCode(result.coupon.code);
+        setCouponData(result.coupon);
       }
       
       setSubscribed(true);

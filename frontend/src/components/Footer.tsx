@@ -2,8 +2,6 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { subscribersDB } from '@/lib/supabase-fetch';
-import { notificationService } from '@/lib/notifications';
 
 export default function Footer() {
   const [email, setEmail] = useState('');
@@ -19,15 +17,18 @@ export default function Footer() {
     setError('');
     
     try {
-      // Guardar en base de datos
-      await subscribersDB.subscribe({
-        email
+      // Usar nueva API que maneja suscripción + email
+      const response = await fetch('/api/newsletter/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
       });
       
-      // Enviar email de bienvenida
-      await notificationService.notifyNewsletterSubscription({
-        email,
-      });
+      const result = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(result.error || 'Error al suscribirse');
+      }
       
       setSubscribed(true);
       setEmail('');

@@ -104,36 +104,31 @@ export default function Home() {
     setNewsletterError('');
     
     try {
-      // Guardar en base de datos
-      await subscribersDB.subscribe({
-        email: newsletterEmail
-      });
-      
-      // Generar cupón (buscar popup de tipo newsletter activo)
+      // Buscar popup de tipo newsletter activo para ver si genera cupón
       const { data: popups } = await popupsDB.getActive('home');
       const newsletterPopup = popups?.find((p: any) => p.plantilla === 'newsletter' && p.generar_cupon);
       
-      if (newsletterPopup) {
-        const { data: couponData } = await popupsDB.generateCoupon(newsletterPopup.id, newsletterEmail);
-        if (couponData && couponData.success) {
-          setNewsletterCoupon(couponData);
-          
-          // Enviar email con cupón
-          await notificationService.notifyNewsletterSubscription({
-            email: newsletterEmail,
-            coupon: {
-              code: couponData.coupon_code,
-              tipo: couponData.tipo,
-              valor: couponData.valor,
-              monto_minimo: couponData.monto_minimo,
-              valido_hasta: couponData.valido_hasta,
-            },
-          });
-        }
-      } else {
-        // Enviar email sin cupón
-        await notificationService.notifyNewsletterSubscription({
+      // Usar nueva API que maneja todo: suscripción + cupón + email
+      const response = await fetch('/api/newsletter/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
           email: newsletterEmail,
+          popupId: newsletterPopup?.id,
+          generateCoupon: newsletterPopup?.generar_cupon
+        })
+      });
+      
+      const result = await response.json();
+      
+      if (result.coupon) {
+        setNewsletterCoupon({
+          coupon_code: result.coupon.code,
+          tipo: result.coupon.tipo,
+          valor: result.coupon.valor,
+          monto_minimo: result.coupon.monto_minimo,
+          valido_hasta: result.coupon.valido_hasta,
+          success: true
         });
       }
       
@@ -144,7 +139,7 @@ export default function Home() {
       setNewsletterEmail('');
       
       // No resetear automáticamente si hay cupón
-      if (!newsletterPopup) {
+      if (!result.coupon) {
         setTimeout(() => setNewsletterSuccess(false), 5000);
       }
     } catch (err) {

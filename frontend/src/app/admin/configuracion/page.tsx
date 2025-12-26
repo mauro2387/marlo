@@ -905,7 +905,7 @@ export default function ConfiguracionPage() {
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
               <p className="text-sm text-blue-700">
                 <span className="font-medium">💡 Tip:</span> Define el horario para cada día de la semana. 
-                Para días especiales (feriados, eventos), agrega una línea extra con la fecha específica.
+                Para múltiples rangos en un día (ej: mañana y tarde), usa comas: <strong>"9:00 - 13:00, 15:00 - 20:00"</strong>
               </p>
             </div>
             
@@ -945,9 +945,10 @@ export default function ConfiguracionPage() {
                       value={schedule.hours}
                       onChange={(e) => handleUpdateHour(index, 'hours', e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
-                      placeholder="Ej: 15:00 - 22:00"
+                      placeholder="Ej: 15:00 - 22:00 o 9:00 - 13:00, 15:00 - 20:00"
                       disabled={!schedule.open}
                     />
+                    <p className="text-xs text-gray-500 mt-1">Varios rangos: separa con comas</p>
                   </div>
 
                   <div className="flex items-end">

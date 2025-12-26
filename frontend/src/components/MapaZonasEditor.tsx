@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -41,8 +41,32 @@ export default function MapaZonasEditor({
   const [puntosNuevos, setPuntosNuevos] = useState<[number, number][]>([]);
   const [puntosEditando, setPuntosEditando] = useState<[number, number][]>([]);
   
+  // Refs para acceder al estado actual dentro del event listener
+  const modoCrearRef = useRef(modoCrear);
+  const zonaEditandoRef = useRef(zonaEditando);
+  
+  // Mantener refs actualizadas
+  useEffect(() => {
+    modoCrearRef.current = modoCrear;
+  }, [modoCrear]);
+  
+  useEffect(() => {
+    zonaEditandoRef.current = zonaEditando;
+  }, [zonaEditando]);
+  
   // Centro en Maldonado
   const centro: [number, number] = [-34.9167, -54.9500];
+
+  // Manejar click en mapa - usando refs para acceder al estado actual
+  const handleMapClick = useCallback((lat: number, lng: number) => {
+    console.log('Click en mapa:', lat, lng, 'modoCrear:', modoCrearRef.current, 'editando:', !!zonaEditandoRef.current);
+    
+    if (modoCrearRef.current) {
+      setPuntosNuevos(prev => [...prev, [lat, lng]]);
+    } else if (zonaEditandoRef.current) {
+      setPuntosEditando(prev => [...prev, [lat, lng]]);
+    }
+  }, []);
 
   // Inicializar mapa
   useEffect(() => {
@@ -66,30 +90,14 @@ export default function MapaZonasEditor({
 
     // Click en mapa para dibujar
     map.on('click', (e: L.LeafletMouseEvent) => {
-      const { lat, lng } = e.latlng;
-      handleMapClick([lat, lng]);
+      handleMapClick(e.latlng.lat, e.latlng.lng);
     });
 
     return () => {
       map.remove();
       mapRef.current = null;
     };
-  }, []);
-
-  // Manejar click en mapa
-  const handleMapClick = (coords: [number, number]) => {
-    if (modoCrear) {
-      setPuntosNuevos(prev => {
-        const nuevos = [...prev, coords];
-        return nuevos;
-      });
-    } else if (zonaEditando) {
-      setPuntosEditando(prev => {
-        const nuevos = [...prev, coords];
-        return nuevos;
-      });
-    }
-  };
+  }, [handleMapClick]);
 
   // Cuando cambian los puntos nuevos, notificar y redibujar
   useEffect(() => {

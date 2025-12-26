@@ -28,9 +28,10 @@ export const SOCIAL_MEDIA = {
 };
 
 // Horarios de atención (formato por día)
+// Ahora soporta múltiples rangos horarios separados por coma (ej: "9:00 - 13:00, 15:00 - 20:00")
 export interface BusinessHour {
   day: string;
-  hours: string;
+  hours: string; // Puede ser "HH:MM - HH:MM" o múltiples rangos separados por coma
   open: boolean;
   dayIndex?: number; // 0=Domingo, 1=Lunes... 6=Sábado
 }
@@ -54,23 +55,67 @@ const parseTime = (timeStr: string): number => {
   return hours + (minutes || 0) / 60;
 };
 
+// Parsear múltiples rangos horarios (ej: "9:00 - 13:00, 15:00 - 20:00")
+const parseTimeRanges = (hoursString: string): Array<{open: number, close: number, openStr: string, closeStr: string}> => {
+  const ranges = hoursString.split(',').map(range => range.trim());
+  const parsed: Array<{open: number, close: number, openStr: string, closeStr: string}> = [];
+  
+  for (const range of ranges) {
+    const match = range.match(/(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})/);
+    if (match) {
+      parsed.push({
+        open: parseTime(match[1]),
+        close: parseTime(match[2]),
+        openStr: match[1],
+        closeStr: match[2]
+      });
+    }
+  }
+  
+  return parsed;
+};
+
 // Función para verificar si está abierto ahora
 export const isOpenNow = (hours?: BusinessHour[]): { open: boolean; message: string } => {
   const businessHours = hours || BUSINESS_HOURS;
+  
+  // Usar hora de Uruguay (UTC-3)
   const now = new Date();
-  const dayOfWeek = now.getDay(); // 0 = Domingo, 1 = Lunes, ..., 6 = Sábado
-  const currentHour = now.getHours();
-  const currentMinutes = now.getMinutes();
+  const uruguayTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/Montevideo' }));
+  
+  const dayOfWeek = uruguayTime.getDay(); // 0 = Domingo, 1 = Lunes, ..., 6 = Sábado
+  const currentHour = uruguayTime.getHours();
+  const currentMinutes = uruguayTime.getMinutes();
   const currentTime = currentHour + currentMinutes / 60;
   const todayName = DAY_NAMES[dayOfWeek];
   
-  // Buscar horario de hoy
-  const todaySchedule = businessHours.find(h => 
-    h.dayIndex === dayOfWeek || h.day === todayName || h.day.includes(todayName)
+  // Formato de fecha actual para buscar horarios especiales (ej: "24/12")
+  const dayOfMonth = uruguayTime.getDate();
+  const month = uruguayTime.getMonth() + 1;
+  const todayDate = `${dayOfMonth}/${month}`;
+  const todayDatePadded = `${dayOfMonth.toString().padStart(2, '0')}/${month.toString().padStart(2, '0')}`;
+  
+  console.log(`[isOpenNow] Hora Uruguay: ${currentHour}:${currentMinutes.toString().padStart(2, '0')}, Día: ${todayName}, Fecha: ${todayDate}, currentTime: ${currentTime.toFixed(2)}`);
+  
+  // PRIMERO buscar horario especial por fecha (ej: "24/12", "25/12")
+  let todaySchedule = businessHours.find(h => 
+    h.day === todayDate || h.day === todayDatePadded || h.day.includes(todayDate)
   );
   
-  // Si no hay horario para hoy o está cerrado
-  if (!todaySchedule || !todaySchedule.open || todaySchedule.hours.toLowerCase() === 'cerrado') {
+  console.log(`[isOpenNow] Horario especial encontrado para ${todayDate}:`, todaySchedule);
+  
+  // Si no hay horario especial, buscar por día de la semana
+  if (!todaySchedule) {
+    todaySchedule = businessHours.find(h => 
+      h.dayIndex === dayOfWeek || h.day === todayName || h.day.includes(todayName)
+    );
+    console.log(`[isOpenNow] Horario por día de semana (${todayName}):`, todaySchedule);
+  }
+  
+  console.log(`[isOpenNow] Horario encontrado:`, todaySchedule);
+  
+  // Si no hay horario para hoy
+  if (!todaySchedule) {
     const nextOpenDay = findNextOpenDay(businessHours, dayOfWeek);
     return { 
       open: false, 
@@ -78,28 +123,63 @@ export const isOpenNow = (hours?: BusinessHour[]): { open: boolean; message: str
     };
   }
   
-  // Parsear horario de apertura y cierre
-  const hoursMatch = todaySchedule.hours.match(/(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})/);
-  if (!hoursMatch) {
+  // Si está explícitamente cerrado (open: false O hours: "Cerrado")
+  const isClosed = todaySchedule.open === false || todaySchedule.hours.toLowerCase() === 'cerrado';
+  if (isClosed) {
+    const nextOpenDay = findNextOpenDay(businessHours, dayOfWeek);
+    return { 
+      open: false, 
+      message: nextOpenDay ? `Cerrado - Abrimos ${nextOpenDay}` : 'Cerrado' 
+    };
+  }
+  
+  // Parsear todos los rangos horarios del día
+  const timeRanges = parseTimeRanges(todaySchedule.hours);
+  
+  console.log(`[isOpenNow] Rangos horarios:`, timeRanges);
+  
+  if (timeRanges.length === 0) {
     return { open: false, message: 'Horario no disponible' };
   }
   
-  const openTime = parseTime(hoursMatch[1]);
-  const closeTime = parseTime(hoursMatch[2]);
-  
-  // Verificar si estamos dentro del horario
-  if (currentTime >= openTime && currentTime < closeTime) {
-    const closeHour = hoursMatch[2];
-    return { open: true, message: `Abierto ahora - Cierra a las ${closeHour}` };
+  // Verificar si estamos dentro de algún rango horario
+  for (const range of timeRanges) {
+    console.log(`[isOpenNow] Verificando rango ${range.openStr}-${range.closeStr}: currentTime(${currentTime.toFixed(2)}) >= open(${range.open}) && < close(${range.close})`);
+    
+    // Caso especial: horario que cruza medianoche (ej: 15:00 - 01:00)
+    if (range.close < range.open) {
+      // El cierre es "mañana", entonces estamos abiertos si:
+      // - currentTime >= apertura (ej: 22:00 >= 15:00) O
+      // - currentTime < cierre (ej: 00:30 < 01:00)
+      if (currentTime >= range.open || currentTime < range.close) {
+        return { open: true, message: `Abierto ahora - Cierra a las ${range.closeStr}` };
+      }
+    } else {
+      // Horario normal que no cruza medianoche
+      if (currentTime >= range.open && currentTime < range.close) {
+        return { open: true, message: `Abierto ahora - Cierra a las ${range.closeStr}` };
+      }
+    }
   }
   
-  // Antes de abrir hoy
-  if (currentTime < openTime) {
-    const openHour = hoursMatch[1];
-    return { open: false, message: `Cerrado - Abrimos hoy a las ${openHour}` };
+  // No estamos en ningún rango abierto, buscar próxima apertura
+  // Primero ver si abrimos más tarde hoy
+  const futureRanges = timeRanges.filter(r => {
+    // Para horarios que cruzan medianoche, si estamos después del cierre pero antes de la apertura
+    if (r.close < r.open) {
+      // Si ya pasó el cierre nocturno (ej: son las 10:00 y cerró a las 01:00)
+      // y aún no llegó la apertura (ej: abre a las 15:00)
+      return currentTime >= r.close && currentTime < r.open;
+    }
+    // Horario normal: verificar si aún no llegó la apertura
+    return currentTime < r.open;
+  });
+  if (futureRanges.length > 0) {
+    const nextRange = futureRanges[0];
+    return { open: false, message: `Cerrado - Abrimos hoy a las ${nextRange.openStr}` };
   }
   
-  // Después de cerrar, buscar próximo día abierto
+  // Si no, buscar próximo día abierto
   const nextOpenDay = findNextOpenDay(businessHours, dayOfWeek);
   return { 
     open: false, 
@@ -117,13 +197,15 @@ const findNextOpenDay = (hours: BusinessHour[], currentDay: number): string | nu
     );
     
     if (schedule && schedule.open && schedule.hours.toLowerCase() !== 'cerrado') {
-      const hoursMatch = schedule.hours.match(/(\d{1,2}:\d{2})/);
-      const openTime = hoursMatch ? hoursMatch[1] : '';
-      
-      if (i === 1) {
-        return `mañana a las ${openTime}`;
+      const timeRanges = parseTimeRanges(schedule.hours);
+      if (timeRanges.length > 0) {
+        const openTime = timeRanges[0].openStr;
+        
+        if (i === 1) {
+          return `mañana a las ${openTime}`;
+        }
+        return `el ${dayName} a las ${openTime}`;
       }
-      return `el ${dayName} a las ${openTime}`;
     }
   }
   return null;

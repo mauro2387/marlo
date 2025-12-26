@@ -336,35 +336,11 @@ export default function AdminPedidosPage() {
         return;
       }
       
-      // Si se marca como ENTREGADO, sumar puntos al usuario
+      // Si se marca como ENTREGADO, los puntos se suman automáticamente
+      // mediante el trigger 'update_loyalty_points_on_delivery' en la base de datos
+      // NO sumar puntos manualmente aquí para evitar duplicación
       if (newStatus === 'entregado' && order?.user_id) {
-        const puntosGanados = order.puntos_ganados || Math.floor(order.total);
-        
-        if (puntosGanados > 0) {
-          try {
-            // Obtener puntos actuales del usuario
-            const { data: userData } = await usersDB.getById(order.user_id);
-            const puntosActuales = userData?.puntos || 0;
-            const nuevosPuntos = puntosActuales + puntosGanados;
-            
-            // Actualizar puntos del usuario
-            await usersDB.update(order.user_id, { puntos: nuevosPuntos });
-            
-            // Registrar en historial de lealtad
-            await loyaltyHistoryDB.create({
-              user_id: order.user_id,
-              tipo: 'ganado',
-              puntos: puntosGanados,
-              concepto: `Compra - Pedido ${generateOrderCode(orderId)}`,
-              order_id: orderId
-            });
-            
-            console.log(`Puntos sumados: ${puntosGanados} al usuario ${order.user_id}`);
-          } catch (pointsError) {
-            console.error('Error sumando puntos (pedido ya entregado):', pointsError);
-            // No mostramos error porque el pedido sí se actualizó
-          }
-        }
+        console.log(`Pedido ${orderId} marcado como entregado. Los puntos se suman automáticamente por trigger.`);
       }
       
       console.log('Estado actualizado correctamente');
