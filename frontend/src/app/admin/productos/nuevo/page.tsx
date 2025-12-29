@@ -20,7 +20,9 @@ export default function NuevoProductoPage() {
     imagenes: [] as string[],
     stock: '50',
     es_limitado: false,
-    activo: true
+    activo: true,
+    solo_retiro_local: false,
+    no_disponible_box: false
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -50,7 +52,9 @@ export default function NuevoProductoPage() {
         imagenes: formData.imagenes,
         stock: parseInt(formData.stock),
         es_limitado: formData.es_limitado,
-        activo: formData.activo
+        activo: formData.activo,
+        solo_retiro_local: formData.solo_retiro_local,
+        no_disponible_box: formData.no_disponible_box
       };
 
       if (!productData.nombre) {
@@ -182,28 +186,64 @@ export default function NuevoProductoPage() {
         />
 
         {/* Checkboxes */}
-        <div className="flex flex-wrap gap-6">
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              name="es_limitado"
-              checked={formData.es_limitado}
-              onChange={handleChange}
-              className="w-4 h-4 text-pink-600 border-gray-300 rounded focus:ring-pink-500"
-            />
-            <span className="text-sm text-gray-700">⭐ Producto Limitado</span>
-          </label>
+        <div className="space-y-4">
+          <p className="text-sm font-medium text-gray-700">Opciones del Producto:</p>
+          
+          <div className="flex flex-wrap gap-6">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                name="es_limitado"
+                checked={formData.es_limitado}
+                onChange={handleChange}
+                className="w-4 h-4 text-pink-600 border-gray-300 rounded focus:ring-pink-500"
+              />
+              <span className="text-sm text-gray-700">⭐ Producto Limitado</span>
+            </label>
 
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              name="activo"
-              checked={formData.activo}
-              onChange={handleChange}
-              className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
-            />
-            <span className="text-sm text-gray-700">✓ Activo (visible en tienda)</span>
-          </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                name="activo"
+                checked={formData.activo}
+                onChange={handleChange}
+                className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
+              />
+              <span className="text-sm text-gray-700">✓ Activo (visible en tienda)</span>
+            </label>
+          </div>
+
+          <div className="p-4 bg-orange-50 rounded-lg border border-orange-200 space-y-3">
+            <p className="text-sm font-medium text-orange-800">🏪 Restricciones de Entrega:</p>
+            
+            <label className="flex items-start gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                name="solo_retiro_local"
+                checked={formData.solo_retiro_local}
+                onChange={handleChange}
+                className="w-4 h-4 mt-0.5 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
+              />
+              <div>
+                <span className="text-sm font-medium text-gray-700">Solo Retiro en Local</span>
+                <p className="text-xs text-gray-500">Este producto NO se puede pedir para envío, solo para retirar en el local físico</p>
+              </div>
+            </label>
+
+            <label className="flex items-start gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                name="no_disponible_box"
+                checked={formData.no_disponible_box}
+                onChange={handleChange}
+                className="w-4 h-4 mt-0.5 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+              />
+              <div>
+                <span className="text-sm font-medium text-gray-700">No Disponible en Box Personalizado</span>
+                <p className="text-xs text-gray-500">Este producto NO aparecerá en el selector de box personalizado</p>
+              </div>
+            </label>
+          </div>
         </div>
 
         {/* Vista previa */}
@@ -221,6 +261,8 @@ export default function NuevoProductoPage() {
               <h4 className="font-semibold text-brown-800">
                 {formData.nombre || 'Nombre del producto'}
                 {formData.es_limitado && <span className="ml-2 text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded">⭐ Limitado</span>}
+                {formData.solo_retiro_local && <span className="ml-2 text-xs bg-orange-100 text-orange-800 px-2 py-0.5 rounded">🏪 Solo retiro</span>}
+                {formData.no_disponible_box && <span className="ml-2 text-xs bg-purple-100 text-purple-800 px-2 py-0.5 rounded">📦 No en box</span>}
                 {formData.imagenes.length > 1 && (
                   <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded">
                     📷 {formData.imagenes.length} imágenes

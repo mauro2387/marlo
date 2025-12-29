@@ -42,6 +42,22 @@ export default function RegistroPage() {
       return;
     }
 
+    // Validar edad mínima (14 años) según políticas de Meta
+    if (formData.fecha_cumpleanos) {
+      const birthDate = new Date(formData.fecha_cumpleanos);
+      const today = new Date();
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const monthDiff = today.getMonth() - birthDate.getMonth();
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+      }
+      
+      if (age < 14) {
+        setError('Debes tener al menos 14 años para crear una cuenta');
+        return;
+      }
+    }
+
     setLoading(true);
 
     try {
@@ -190,7 +206,7 @@ export default function RegistroPage() {
 
                 <div>
                   <label htmlFor="fecha_cumpleanos" className="block text-sm font-semibold text-gray-700 mb-2">
-                    Fecha de Cumpleaños 🎂
+                    Fecha de Nacimiento * 🎂
                   </label>
                   <input
                     type="date"
@@ -198,10 +214,11 @@ export default function RegistroPage() {
                     name="fecha_cumpleanos"
                     value={formData.fecha_cumpleanos}
                     onChange={handleChange}
+                    required
                     max={new Date().toISOString().split('T')[0]}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
                   />
-                  <p className="text-xs text-gray-500 mt-1">¡Recibe una sorpresa especial en tu cumpleaños!</p>
+                  <p className="text-xs text-gray-500 mt-1">Debes tener al menos 14 años. ¡También recibirás una sorpresa en tu cumpleaños!</p>
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-4">

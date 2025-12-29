@@ -1001,6 +1001,17 @@ export default function PuntosPage() {
                   ⏰ Válido por 30 días • Un solo uso
                 </p>
               </div>
+
+              {/* Aviso de cupón solo online */}
+              <div className="bg-orange-50 border-2 border-orange-200 rounded-xl p-4 mb-6">
+                <p className="text-sm font-bold text-orange-800 flex items-center justify-center gap-2">
+                  <span className="material-icons text-base">store</span>
+                  🌐 Este cupón es válido SOLO para compras online
+                </p>
+                <p className="text-xs text-orange-600 mt-1">
+                  No puede ser canjeado en el local físico
+                </p>
+              </div>
               
               <div className="flex gap-3">
                 <button

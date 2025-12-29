@@ -98,6 +98,10 @@ function CheckoutContent() {
   const [metodoPago, setMetodoPago] = useState<'efectivo' | 'transferencia' | 'mercadopago' | 'puntos'>(esCanjePuntos ? 'puntos' : 'efectivo');
   const [tipoEntrega, setTipoEntrega] = useState<'delivery' | 'retiro'>('delivery');
   
+  // Verificar si hay productos solo retiro en el carrito
+  const [productosSoloRetiro, setProductosSoloRetiro] = useState<string[]>([]);
+  const hayProductosSoloRetiro = productosSoloRetiro.length > 0;
+  
   // Límite de pedidos pendientes
   const [pedidosPendientes, setPedidosPendientes] = useState(0);
   const LIMITE_PEDIDOS_PENDIENTES = 2;
@@ -138,6 +142,21 @@ function CheckoutContent() {
       if (items.length === 0) {
         router.push('/carrito');
         return;
+      }
+      
+      // Verificar productos solo retiro
+      const productosConRestriccion: string[] = [];
+      for (const item of items) {
+        const { data: producto } = await productsDB.getById(item.id);
+        if (producto?.solo_retiro_local) {
+          productosConRestriccion.push(producto.nombre);
+        }
+      }
+      setProductosSoloRetiro(productosConRestriccion);
+      
+      // Si hay productos solo retiro, forzar a retiro en local
+      if (productosConRestriccion.length > 0) {
+        setTipoEntrega('retiro');
       }
       
       // Pre-llenar datos del usuario
@@ -700,19 +719,46 @@ function CheckoutContent() {
                   Tipo de Entrega
                 </h2>
                 
+                {/* Advertencia productos solo retiro */}
+                {hayProductosSoloRetiro && (
+                  <div className="mb-4 p-4 bg-orange-50 border-2 border-orange-300 rounded-lg">
+                    <div className="flex items-start gap-3">
+                      <span className="text-2xl">🏪</span>
+                      <div className="flex-1">
+                        <p className="font-semibold text-orange-900 mb-1">
+                          Pedido solo disponible para retiro en local
+                        </p>
+                        <p className="text-sm text-orange-800 mb-2">
+                          Tu carrito incluye productos que solo se pueden retirar en nuestro local:
+                        </p>
+                        <ul className="list-disc list-inside text-sm text-orange-700 space-y-1">
+                          {productosSoloRetiro.map((nombre, idx) => (
+                            <li key={idx}>{nombre}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
                 <div className="grid grid-cols-2 gap-4 mb-4">
                   <button
                     type="button"
-                    onClick={() => setTipoEntrega('delivery')}
+                    onClick={() => !hayProductosSoloRetiro && setTipoEntrega('delivery')}
+                    disabled={hayProductosSoloRetiro}
                     className={`p-4 rounded-lg border-2 transition-all ${
-                      tipoEntrega === 'delivery'
-                        ? 'border-pink-500 bg-pink-50'
-                        : 'border-gray-200 hover:border-pink-300'
+                      hayProductosSoloRetiro 
+                        ? 'border-gray-200 bg-gray-100 opacity-50 cursor-not-allowed'
+                        : tipoEntrega === 'delivery'
+                          ? 'border-pink-500 bg-pink-50'
+                          : 'border-gray-200 hover:border-pink-300'
                     }`}
                   >
                     <div className="text-2xl mb-2">🚗</div>
                     <div className="font-semibold">Delivery</div>
-                    <div className="text-sm text-gray-500">Te lo llevamos</div>
+                    <div className="text-sm text-gray-500">
+                      {hayProductosSoloRetiro ? 'No disponible' : 'Te lo llevamos'}
+                    </div>
                   </button>
                   
                   <button
@@ -1167,6 +1213,7 @@ function CheckoutContent() {
                         <div className="flex items-center gap-2">
                           <span className="text-green-600">✓</span>
                           <span className="text-sm font-medium">{cuponAplicado.code}</span>
+                          <span className="text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full">Solo online</span>
                         </div>
                         <button
                           type="button"

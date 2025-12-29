@@ -13,6 +13,7 @@ interface Cliente {
   rol: string;
   created_at: string;
   total_pedidos?: number;
+  fecha_cumpleanos?: string;
 }
 
 export default function ClientesAdminPage() {
@@ -57,6 +58,22 @@ export default function ClientesAdminPage() {
     cliente.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     cliente.telefono?.includes(searchTerm)
   );
+
+  const calcularEdad = (fechaNacimiento: string) => {
+    const hoy = new Date();
+    const nacimiento = new Date(fechaNacimiento);
+    let edad = hoy.getFullYear() - nacimiento.getFullYear();
+    const mes = hoy.getMonth() - nacimiento.getMonth();
+    if (mes < 0 || (mes === 0 && hoy.getDate() < nacimiento.getDate())) {
+      edad--;
+    }
+    return edad;
+  };
+
+  const formatearFecha = (fecha: string) => {
+    const date = new Date(fecha);
+    return date.toLocaleDateString('es-UY', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  };
 
   if (loading) {
     return (
@@ -103,6 +120,9 @@ export default function ClientesAdminPage() {
                 Contacto
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Cumpleaños / Edad
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Puntos
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -136,6 +156,16 @@ export default function ClientesAdminPage() {
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm text-gray-900">{cliente.email}</div>
                   <div className="text-sm text-gray-500">{cliente.telefono || '-'}</div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  {cliente.fecha_cumpleanos ? (
+                    <div>
+                      <div className="text-sm text-gray-900">🎂 {formatearFecha(cliente.fecha_cumpleanos)}</div>
+                      <div className="text-sm text-gray-500">{calcularEdad(cliente.fecha_cumpleanos)} años</div>
+                    </div>
+                  ) : (
+                    <div className="text-sm text-gray-400">No registrado</div>
+                  )}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm font-medium">
@@ -210,6 +240,7 @@ export default function ClientesAdminPage() {
               
               <div className="border-t pt-3 space-y-2">
                 <p><span className="font-medium">Teléfono:</span> {selectedCliente.telefono || 'No registrado'}</p>
+                <p><span className="font-medium">Cumpleaños:</span> {selectedCliente.fecha_cumpleanos ? `🎂 ${formatearFecha(selectedCliente.fecha_cumpleanos)} (${calcularEdad(selectedCliente.fecha_cumpleanos)} años)` : 'No registrado'}</p>
                 <p><span className="font-medium">Puntos:</span> ⭐ {selectedCliente.puntos || 0}</p>
                 <p><span className="font-medium">Rol:</span> {selectedCliente.rol || 'cliente'}</p>
                 <p><span className="font-medium">Registrado:</span> {new Date(selectedCliente.created_at).toLocaleString('es-UY')}</p>

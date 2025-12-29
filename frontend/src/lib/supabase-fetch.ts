@@ -1008,6 +1008,7 @@ export const siteSettingsDB = {
     google_rating?: number;
     google_reviews_count?: number;
     google_reviews_url?: string;
+    birthday_config?: any;
   }) => {
     return supabaseFetch<any>('site_settings?id=eq.main', { 
       method: 'PATCH', 

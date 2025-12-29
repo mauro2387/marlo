@@ -114,7 +114,11 @@ export default function BoxesPage() {
         .sort((a: Box, b: Box) => a.cantidad_cookies - b.cantidad_cookies);
       
       const cookieProducts = (allProducts || [])
-        .filter((p: any) => p.categoria === 'cookies' && p.activo)
+        .filter((p: any) => 
+          p.categoria === 'cookies' && 
+          p.activo && 
+          !p.no_disponible_box  // Excluir productos marcados como no disponibles para box
+        )
         .map((p: any) => ({
           id: p.id,
           nombre: p.nombre,
@@ -383,7 +387,7 @@ export default function BoxesPage() {
               </h2>
 
               {/* Grid de 3 columnas en móvil */}
-              <div className="grid grid-cols-3 sm:grid-cols-2 md:grid-cols-3 gap-2 sm:gap-3 lg:gap-4">
+              <div className="grid grid-cols-3 sm:grid-cols-2 md:grid-cols-3 gap-2 sm:gap-3 lg:gap-4 pb-32 lg:pb-0">
                 {cookies.map(cookie => {
                   const availableStock = getAvailableStock(cookie.id);
                   const noStock = availableStock <= 0 && !cookiesSeleccionadas[cookie.id];

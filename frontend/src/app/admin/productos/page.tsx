@@ -16,6 +16,8 @@ interface Product {
   stock: number;
   es_limitado: boolean;
   activo: boolean;
+  solo_retiro_local: boolean;
+  no_disponible_box: boolean;
   created_at: string;
 }
 
@@ -238,6 +240,7 @@ function ProductosContent() {
                 <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">Categoría</th>
                 <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">Precio</th>
                 <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">Stock</th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">Restricciones</th>
                 <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">Estado</th>
                 <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">Acciones</th>
               </tr>
@@ -311,6 +314,23 @@ function ProductosContent() {
                         {product.stock < 10 && ' ⚠️'}
                       </button>
                     )}
+                  </td>
+                  <td className="py-3 px-4">
+                    <div className="flex flex-col gap-1">
+                      {product.solo_retiro_local && (
+                        <span className="text-xs bg-orange-100 text-orange-800 px-2 py-0.5 rounded whitespace-nowrap">
+                          🏪 Solo retiro
+                        </span>
+                      )}
+                      {product.no_disponible_box && (
+                        <span className="text-xs bg-purple-100 text-purple-800 px-2 py-0.5 rounded whitespace-nowrap">
+                          📦 No en box
+                        </span>
+                      )}
+                      {!product.solo_retiro_local && !product.no_disponible_box && (
+                        <span className="text-xs text-gray-400">Sin restricciones</span>
+                      )}
+                    </div>
                   </td>
                   <td className="py-3 px-4">
                     <button

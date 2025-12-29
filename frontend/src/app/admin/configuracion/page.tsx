@@ -105,6 +105,17 @@ export default function ConfiguracionPage() {
     url: 'https://www.google.com/search?kgmid=/g/11ybpp3pv9#lrd=0x9575110030adacd1:0x62e6dd03788fee45,1'
   });
 
+  // Configuración de Cupones de Cumpleaños
+  const [birthdayConfig, setBirthdayConfig] = useState({
+    enabled: true,
+    send_email: true,
+    discount_type: 'porcentaje' as 'porcentaje' | 'fijo',
+    discount_value: 15,
+    validity_days: 7,
+    email_subject: '🎂 ¡Feliz Cumpleaños! Aquí tienes tu regalo especial',
+    email_body: '¡Feliz cumpleaños! 🎉 Disfruta de un %VALUE%% de descuento en tu próxima compra. Usa el código: %CODE%'
+  });
+
   useEffect(() => {
     fetchData();
   }, []);
@@ -160,6 +171,11 @@ export default function ConfiguracionPage() {
             count: settingsRes.data.google_reviews_count || 21,
             url: settingsRes.data.google_reviews_url || googleReviews.url
           });
+        }
+
+        // Cargar configuración de cumpleaños
+        if (settingsRes.data.birthday_config) {
+          setBirthdayConfig(settingsRes.data.birthday_config);
         }
         
         // Productos seleccionados para el banner
@@ -345,6 +361,23 @@ export default function ConfiguracionPage() {
       });
       if (error) throw error;
       setMessage({ type: 'success', text: 'Google Reviews actualizado correctamente' });
+    } catch (err: any) {
+      setMessage({ type: 'error', text: err?.message || 'Error al guardar' });
+    } finally {
+      setSaving(null);
+      setTimeout(() => setMessage(null), 3000);
+    }
+  };
+
+  // Guardar configuración de cumpleaños
+  const handleSaveBirthdayConfig = async () => {
+    setSaving('birthday');
+    try {
+      const { error } = await siteSettingsDB.update({
+        birthday_config: birthdayConfig
+      });
+      if (error) throw error;
+      setMessage({ type: 'success', text: 'Configuración de cumpleaños guardada' });
     } catch (err: any) {
       setMessage({ type: 'error', text: err?.message || 'Error al guardar' });
     } finally {
@@ -1124,6 +1157,172 @@ export default function ConfiguracionPage() {
         >
           <span className="material-icons text-sm">save</span>
           {saving === 'google' ? 'Guardando...' : 'Guardar Fallback'}
+        </button>
+      </div>
+
+      {/* Configuración de Cupones de Cumpleaños */}
+      <div className="bg-white rounded-xl shadow-md p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+            🎂 Cupones Automáticos de Cumpleaños
+          </h3>
+          <label className="relative inline-flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              checked={birthdayConfig.enabled}
+              onChange={(e) => setBirthdayConfig(prev => ({ ...prev, enabled: e.target.checked }))}
+              className="sr-only peer"
+            />
+            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+            <span className="ms-3 text-sm font-medium text-gray-700">
+              {birthdayConfig.enabled ? 'Activo' : 'Inactivo'}
+            </span>
+          </label>
+        </div>
+
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+          <p className="text-sm text-blue-700">
+            ℹ️ <strong>Sistema automático:</strong> Cada día, el sistema genera cupones de descuento para usuarios que cumplen años 
+            y les envía un email de felicitación. Los cupones son <strong>válidos solo para compras online</strong>.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Tipo y valor del descuento */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              💰 Tipo de Descuento
+            </label>
+            <select
+              value={birthdayConfig.discount_type}
+              onChange={(e) => setBirthdayConfig(prev => ({ ...prev, discount_type: e.target.value as 'porcentaje' | 'fijo' }))}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="porcentaje">Porcentaje (%)</option>
+              <option value="fijo">Monto Fijo ($)</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              🎁 Valor del Descuento
+            </label>
+            <div className="relative">
+              <input
+                type="number"
+                min="1"
+                max={birthdayConfig.discount_type === 'porcentaje' ? 100 : 10000}
+                value={birthdayConfig.discount_value}
+                onChange={(e) => setBirthdayConfig(prev => ({ ...prev, discount_value: parseInt(e.target.value) || 0 }))}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              />
+              <span className="absolute right-3 top-2 text-gray-500">
+                {birthdayConfig.discount_type === 'porcentaje' ? '%' : '$'}
+              </span>
+            </div>
+          </div>
+
+          {/* Días de validez */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              📅 Días de Validez
+            </label>
+            <input
+              type="number"
+              min="1"
+              max="30"
+              value={birthdayConfig.validity_days}
+              onChange={(e) => setBirthdayConfig(prev => ({ ...prev, validity_days: parseInt(e.target.value) || 7 }))}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Días que el cupón estará activo desde el cumpleaños
+            </p>
+          </div>
+
+          {/* Enviar email */}
+          <div className="flex items-center h-full">
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={birthdayConfig.send_email}
+                onChange={(e) => setBirthdayConfig(prev => ({ ...prev, send_email: e.target.checked }))}
+                className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+              <span className="text-sm font-medium text-gray-700">
+                📧 Enviar email automático
+              </span>
+            </label>
+          </div>
+        </div>
+
+        {/* Personalización del email */}
+        {birthdayConfig.send_email && (
+          <div className="mt-6 pt-6 border-t border-gray-200">
+            <h4 className="font-semibold text-gray-800 mb-4">✉️ Personalizar Email</h4>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Asunto del Email
+                </label>
+                <input
+                  type="text"
+                  value={birthdayConfig.email_subject}
+                  onChange={(e) => setBirthdayConfig(prev => ({ ...prev, email_subject: e.target.value }))}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  placeholder="¡Feliz Cumpleaños!"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Cuerpo del Email
+                </label>
+                <textarea
+                  value={birthdayConfig.email_body}
+                  onChange={(e) => setBirthdayConfig(prev => ({ ...prev, email_body: e.target.value }))}
+                  rows={4}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  placeholder="Mensaje de cumpleaños..."
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Variables disponibles: <code className="bg-gray-100 px-1 rounded">%CODE%</code> (código del cupón), 
+                  <code className="bg-gray-100 px-1 rounded ml-1">%VALUE%</code> (valor del descuento),
+                  <code className="bg-gray-100 px-1 rounded ml-1">%NAME%</code> (nombre del cliente)
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Preview */}
+        <div className="mt-6 p-4 bg-gradient-to-r from-pink-50 to-purple-50 rounded-lg border border-pink-200">
+          <p className="text-sm text-gray-700 mb-3 font-semibold">📝 Vista previa del cupón:</p>
+          <div className="bg-white rounded-lg p-4 shadow-sm border-2 border-dashed border-pink-300">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Código de ejemplo:</p>
+                <p className="text-2xl font-bold text-pink-600 font-mono">CUMPLE2025-ABC123</p>
+              </div>
+              <div className="text-right">
+                <p className="text-3xl font-bold text-purple-600">
+                  {birthdayConfig.discount_type === 'porcentaje' ? `${birthdayConfig.discount_value}%` : `$${birthdayConfig.discount_value}`}
+                </p>
+                <p className="text-xs text-gray-500">Válido {birthdayConfig.validity_days} días</p>
+                <p className="text-xs font-semibold text-orange-600 mt-1">🌐 Solo válido para compras online</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <button
+          onClick={handleSaveBirthdayConfig}
+          disabled={saving === 'birthday'}
+          className="mt-4 px-6 py-2 bg-pink-500 text-white rounded-lg font-medium hover:bg-pink-600 disabled:opacity-50 flex items-center gap-2"
+        >
+          <span className="material-icons text-sm">save</span>
+          {saving === 'birthday' ? 'Guardando...' : 'Guardar Configuración'}
         </button>
       </div>
 

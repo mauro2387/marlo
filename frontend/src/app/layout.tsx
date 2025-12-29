@@ -4,6 +4,7 @@ import './globals.css';
 import MiniCart from '@/components/MiniCart';
 import NotificationContainer from '@/components/NotificationContainer';
 import ActiveOrderBanner from '@/components/ActiveOrderBanner';
+import CookieBanner from '@/components/CookieBanner';
 import { AuthProvider } from '@/components/AuthProvider';
 import MetaPixel from '@/components/MetaPixel';
 
@@ -26,6 +27,23 @@ export const metadata: Metadata = {
     'Disfruta de las cookies más deliciosas y artesanales de Maldonado. Cookies clásicas, especiales, box personalizados y más. Sistema de puntos y envío a domicilio.',
   keywords:
     'cookies, cookies artesanales, postres, box de cookies, MarLo Cookies, Uruguay, Maldonado',
+  icons: {
+    icon: '/favicon.png',
+    apple: '/apple-touch-icon.png',
+  },
+  openGraph: {
+    title: 'MarLo Cookies - Las mejores cookies artesanales de Uruguay',
+    description: 'Disfruta de las cookies más deliciosas y artesanales de Maldonado. Sistema de puntos y envío a domicilio.',
+    images: ['/logo.png'],
+    locale: 'es_UY',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'MarLo Cookies - Las mejores cookies artesanales de Uruguay',
+    description: 'Disfruta de las cookies más deliciosas y artesanales de Maldonado.',
+    images: ['/logo.png'],
+  },
 };
 
 export default function RootLayout({
@@ -53,6 +71,7 @@ export default function RootLayout({
           <MiniCart />
           <NotificationContainer />
           <ActiveOrderBanner />
+          <CookieBanner />
         </AuthProvider>
       </body>
     </html>

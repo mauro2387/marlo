@@ -50,6 +50,13 @@ export default function TerminosPage() {
                     <li>Mejorar nuestros productos y servicios</li>
                     <li>Cumplir con obligaciones legales</li>
                   </ul>
+                  <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mt-4">
+                    <p className="text-gray-700 leading-relaxed">
+                      <strong>Compartición de datos con terceros:</strong> Asimismo, compartimos información sobre las acciones que realiza en nuestro sitio 
+                      con proveedores de servicios de análisis y publicidad, como <strong>Meta Platforms, Inc.</strong>, con el fin de medir la eficacia 
+                      de nuestros anuncios y mostrarle publicidad personalizada basada en sus intereses.
+                    </p>
+                  </div>
                   <p className="text-gray-700 leading-relaxed mt-4">
                     <strong>Base legal:</strong> El tratamiento de sus datos se basa en el consentimiento que usted otorga al aceptar estos términos, 
                     la ejecución del contrato de compraventa, y nuestro interés legítimo en mejorar nuestros servicios.
@@ -57,7 +64,25 @@ export default function TerminosPage() {
                 </section>
 
                 <section>
-                  <h2 className="text-2xl font-bold text-primary mb-4">3. Derechos del Usuario sobre sus Datos</h2>
+                  <h2 className="text-2xl font-bold text-primary mb-4">3. Edad Mínima y Protección de Menores</h2>
+                  <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4 mb-4">
+                    <p className="text-gray-700 leading-relaxed">
+                      <strong>Nuestros servicios están destinados exclusivamente a personas mayores de 14 años.</strong> Al crear una cuenta 
+                      en MarLo Cookies, usted declara y garantiza que tiene al menos 14 años de edad.
+                    </p>
+                  </div>
+                  <p className="text-gray-700 leading-relaxed mb-4">
+                    No recopilamos ni procesamos intencionalmente información personal de menores de 14 años, en cumplimiento con las 
+                    Condiciones de las Herramientas de Meta para Empresas y la legislación de protección de datos aplicable.
+                  </p>
+                  <p className="text-gray-700 leading-relaxed">
+                    Si descubrimos que hemos recopilado información de un menor de 14 años sin el consentimiento parental apropiado, 
+                    eliminaremos esa información de nuestros sistemas de manera inmediata.
+                  </p>
+                </section>
+
+                <section>
+                  <h2 className="text-2xl font-bold text-primary mb-4">4. Derechos del Usuario sobre sus Datos</h2>
                   <p className="text-gray-700 leading-relaxed mb-4">
                     Conforme a la Ley N° 18.331 de Protección de Datos Personales de Uruguay, usted tiene derecho a:
                   </p>
@@ -74,7 +99,7 @@ export default function TerminosPage() {
                 </section>
 
                 <section>
-                  <h2 className="text-2xl font-bold text-primary mb-4">4. Uso del Sitio Web</h2>
+                  <h2 className="text-2xl font-bold text-primary mb-4">5. Uso del Sitio Web</h2>
                   <p className="text-gray-700 leading-relaxed mb-4">
                     Nuestro sitio web está destinado para uso personal y no comercial. Usted se compromete a:
                   </p>
@@ -87,7 +112,7 @@ export default function TerminosPage() {
                 </section>
 
                 <section>
-                  <h2 className="text-2xl font-bold text-primary mb-4">5. Productos y Precios</h2>
+                  <h2 className="text-2xl font-bold text-primary mb-4">6. Productos y Precios</h2>
                   <p className="text-gray-700 leading-relaxed">
                     Todos los productos mostrados en nuestro sitio web están sujetos a disponibilidad. Los precios están expresados en pesos uruguayos (UYU) 
                     e incluyen IVA. Nos reservamos el derecho de modificar precios sin previo aviso, aunque los pedidos ya confirmados mantendrán el precio 
@@ -96,7 +121,7 @@ export default function TerminosPage() {
                 </section>
 
                 <section>
-                  <h2 className="text-2xl font-bold text-primary mb-4">6. Pedidos y Pagos</h2>
+                  <h2 className="text-2xl font-bold text-primary mb-4">7. Pedidos y Pagos</h2>
                   <p className="text-gray-700 leading-relaxed mb-4">
                     Al realizar un pedido, usted acepta que:
                   </p>
@@ -110,7 +135,7 @@ export default function TerminosPage() {
                 </section>
 
                 <section>
-                  <h2 className="text-2xl font-bold text-primary mb-4">7. Envíos y Entregas</h2>
+                  <h2 className="text-2xl font-bold text-primary mb-4">8. Envíos y Entregas</h2>
                   <p className="text-gray-700 leading-relaxed">
                     Realizamos envíos a todo Maldonado y zonas aledañas. Los tiempos de entrega son estimados y pueden variar. 
                     El costo de envío depende de la zona de entrega. No nos hacemos responsables por retrasos causados por 
@@ -119,7 +144,7 @@ export default function TerminosPage() {
                 </section>
 
                 <section>
-                  <h2 className="text-2xl font-bold text-primary mb-4">8. Política de Devoluciones</h2>
+                  <h2 className="text-2xl font-bold text-primary mb-4">9. Política de Devoluciones</h2>
                   <p className="text-gray-700 leading-relaxed">
                     Dado que trabajamos con productos alimenticios artesanales, no aceptamos devoluciones excepto en casos de 
                     productos defectuosos o errores en el pedido. Si su pedido llega dañado o incorrecto, contáctenos dentro de 
@@ -128,7 +153,7 @@ export default function TerminosPage() {
                 </section>
 
                 <section>
-                  <h2 className="text-2xl font-bold text-primary mb-4">9. Programa de Puntos</h2>
+                  <h2 className="text-2xl font-bold text-primary mb-4">10. Programa de Puntos</h2>
                   <p className="text-gray-700 leading-relaxed mb-4">
                     Nuestro programa de fidelización funciona de la siguiente manera:
                   </p>
@@ -143,7 +168,7 @@ export default function TerminosPage() {
                 </section>
 
                 <section>
-                  <h2 className="text-2xl font-bold text-primary mb-4">10. Comunicaciones de Marketing</h2>
+                  <h2 className="text-2xl font-bold text-primary mb-4">11. Comunicaciones de Marketing</h2>
                   <p className="text-gray-700 leading-relaxed mb-4">
                     Al suscribirse a nuestro newsletter o aceptar recibir comunicaciones, usted acepta recibir:
                   </p>
@@ -160,7 +185,7 @@ export default function TerminosPage() {
                 </section>
 
                 <section>
-                  <h2 className="text-2xl font-bold text-primary mb-4">11. Seguridad de Datos</h2>
+                  <h2 className="text-2xl font-bold text-primary mb-4">12. Seguridad de Datos</h2>
                   <p className="text-gray-700 leading-relaxed">
                     Implementamos medidas de seguridad técnicas y organizativas para proteger sus datos personales contra acceso no autorizado, 
                     pérdida o destrucción. Utilizamos encriptación SSL para todas las transacciones y almacenamos sus datos en servidores seguros.
@@ -168,15 +193,55 @@ export default function TerminosPage() {
                 </section>
 
                 <section>
-                  <h2 className="text-2xl font-bold text-primary mb-4">12. Cookies</h2>
-                  <p className="text-gray-700 leading-relaxed">
-                    Utilizamos cookies para mejorar su experiencia en nuestro sitio web, recordar sus preferencias y analizar el uso del sitio. 
-                    Puede configurar su navegador para rechazar cookies, aunque esto puede afectar la funcionalidad del sitio.
+                  <h2 className="text-2xl font-bold text-primary mb-4">13. Cookies y Tecnologías de Terceros</h2>
+                  <p className="text-gray-700 leading-relaxed mb-4">
+                    Utilizamos cookies propias y de terceros, incluyendo el <strong>Píxel de Meta</strong>, para recopilar información sobre su navegación.
                   </p>
+                  
+                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4">
+                    <p className="text-gray-700 mb-2"><strong>Finalidad:</strong></p>
+                    <p className="text-gray-700 leading-relaxed">
+                      Estas tecnologías permiten a terceros, como Meta, recibir información de nuestro sitio web para proporcionar servicios 
+                      de medición y segmentar anuncios dirigidos.
+                    </p>
+                  </div>
+
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <p className="text-gray-700 mb-3"><strong>Control del usuario:</strong></p>
+                    <p className="text-gray-700 leading-relaxed mb-3">
+                      Usted puede configurar su navegador para rechazar cookies. Además, para ejercer su derecho a que su información 
+                      no sea recopilada para la segmentación de anuncios, puede dirigirse a los siguientes sitios de elección del consumidor:
+                    </p>
+                    <ul className="list-disc list-inside space-y-2 text-gray-700 ml-4 mb-3">
+                      <li>
+                        <a 
+                          href="http://www.aboutads.info/choices" 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-primary hover:underline font-semibold"
+                        >
+                          http://www.aboutads.info/choices
+                        </a>
+                      </li>
+                      <li>
+                        <a 
+                          href="http://www.youronlinechoices.eu/" 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-primary hover:underline font-semibold"
+                        >
+                          http://www.youronlinechoices.eu/
+                        </a>
+                      </li>
+                    </ul>
+                    <p className="text-gray-700 leading-relaxed">
+                      También puede ajustar sus preferencias de anuncios directamente desde la configuración de su cuenta de Facebook o Instagram.
+                    </p>
+                  </div>
                 </section>
 
                 <section>
-                  <h2 className="text-2xl font-bold text-primary mb-4">13. Propiedad Intelectual</h2>
+                  <h2 className="text-2xl font-bold text-primary mb-4">14. Propiedad Intelectual</h2>
                   <p className="text-gray-700 leading-relaxed">
                     Todo el contenido de este sitio web, incluyendo textos, imágenes, logos y diseños, es propiedad de MarLo Cookies 
                     y está protegido por las leyes de propiedad intelectual. No se permite la reproducción sin autorización expresa.
@@ -184,7 +249,7 @@ export default function TerminosPage() {
                 </section>
 
                 <section>
-                  <h2 className="text-2xl font-bold text-primary mb-4">14. Limitación de Responsabilidad</h2>
+                  <h2 className="text-2xl font-bold text-primary mb-4">15. Limitación de Responsabilidad</h2>
                   <p className="text-gray-700 leading-relaxed">
                     MarLo Cookies no será responsable por daños indirectos, incidentales o consecuentes derivados del uso del sitio web 
                     o de la compra de productos. Nuestra responsabilidad está limitada al valor del producto adquirido.
@@ -192,7 +257,7 @@ export default function TerminosPage() {
                 </section>
 
                 <section>
-                  <h2 className="text-2xl font-bold text-primary mb-4">15. Modificaciones</h2>
+                  <h2 className="text-2xl font-bold text-primary mb-4">16. Modificaciones</h2>
                   <p className="text-gray-700 leading-relaxed">
                     Nos reservamos el derecho de modificar estos términos y condiciones en cualquier momento. Las modificaciones entrarán 
                     en vigor inmediatamente después de su publicación en el sitio web. Es responsabilidad del usuario revisar periódicamente 
@@ -201,7 +266,7 @@ export default function TerminosPage() {
                 </section>
 
                 <section>
-                  <h2 className="text-2xl font-bold text-primary mb-4">16. Ley Aplicable</h2>
+                  <h2 className="text-2xl font-bold text-primary mb-4">17. Ley Aplicable</h2>
                   <p className="text-gray-700 leading-relaxed">
                     Estos términos y condiciones se rigen por las leyes de la República Oriental del Uruguay, incluyendo la Ley N° 18.331 
                     de Protección de Datos Personales. Cualquier disputa será resuelta en los tribunales competentes de Maldonado, Uruguay.
@@ -209,7 +274,7 @@ export default function TerminosPage() {
                 </section>
 
                 <section>
-                  <h2 className="text-2xl font-bold text-primary mb-4">17. Contacto</h2>
+                  <h2 className="text-2xl font-bold text-primary mb-4">18. Contacto</h2>
                   <p className="text-gray-700 leading-relaxed mb-4">
                     Para cualquier consulta sobre estos términos y condiciones o sobre el tratamiento de sus datos personales, puede contactarnos:
                   </p>

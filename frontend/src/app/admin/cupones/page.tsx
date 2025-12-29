@@ -255,6 +255,20 @@ export default function CuponesAdminPage() {
         </button>
       </div>
 
+      {/* Aviso importante */}
+      <div className="bg-gradient-to-r from-orange-500 to-pink-500 text-white rounded-xl p-4 shadow-lg">
+        <div className="flex items-center gap-3">
+          <span className="material-icons text-2xl">info</span>
+          <div>
+            <p className="font-bold text-lg">⚠️ Importante: Cupones Solo Online</p>
+            <p className="text-sm opacity-90">
+              Todos los cupones de descuento son válidos <strong>únicamente para compras realizadas a través de la web</strong>. 
+              No pueden ser canjeados en el local físico.
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Tabla de cupones */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <table className="min-w-full divide-y divide-gray-200">
@@ -474,6 +488,17 @@ export default function CuponesAdminPage() {
                   className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-pink-500"
                   placeholder="Ej: ¡Cupón especial de Black Friday!"
                 />
+              </div>
+
+              {/* Aviso de cupón online */}
+              <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
+                <p className="text-sm text-orange-800 flex items-center gap-2">
+                  <span className="material-icons text-base">info</span>
+                  <strong>Todos los cupones son válidos únicamente para compras online</strong>
+                </p>
+                <p className="text-xs text-orange-600 mt-1 ml-6">
+                  No pueden ser canjeados en el local físico
+                </p>
               </div>
 
               {/* Imagen con Drag & Drop */}
