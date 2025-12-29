@@ -107,17 +107,17 @@ export default function AdminLayout({
 
   return (
     <div className="min-h-screen bg-gray-100 flex">
-      {/* Sidebar */}
-      <aside className={`${sidebarOpen ? 'w-64' : 'w-20'} bg-gray-900 text-white transition-all duration-300 flex flex-col`}>
+      {/* Sidebar - Fixed */}
+      <aside className={`${sidebarOpen ? 'w-64' : 'w-20'} bg-gray-900 text-white transition-all duration-300 flex flex-col fixed left-0 top-0 h-screen`}>
         {/* Logo */}
-        <div className="p-4 border-b border-gray-700">
+        <div className="p-4 border-b border-gray-700 flex-shrink-0">
           <Link href="/admin" className="flex items-center gap-3">
             <span className="material-icons text-pink-400 text-2xl">cookie</span>
             {sidebarOpen && <span className="font-bold text-lg text-white">MarLo Admin</span>}
           </Link>
         </div>
 
-        {/* Menu */}
+        {/* Menu - Scrollable */}
         <nav className="flex-1 p-4 overflow-y-auto">
           <ul className="space-y-1">
             {menuItems.map((item) => (
@@ -138,28 +138,31 @@ export default function AdminLayout({
           </ul>
         </nav>
 
-        {/* Toggle */}
-        <button
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="p-4 border-t border-gray-700 hover:bg-gray-800 transition-colors flex items-center justify-center text-gray-300 hover:text-white"
-        >
-          <span className="material-icons">{sidebarOpen ? 'chevron_left' : 'chevron_right'}</span>
-        </button>
+        {/* Bottom Actions - Always visible */}
+        <div className="flex-shrink-0 border-t border-gray-700">
+          {/* Toggle */}
+          <button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="w-full p-4 hover:bg-gray-800 transition-colors flex items-center justify-center text-gray-300 hover:text-white"
+          >
+            <span className="material-icons">{sidebarOpen ? 'chevron_left' : 'chevron_right'}</span>
+          </button>
 
-        {/* Volver al sitio */}
-        <Link
-          href="/"
-          className="p-4 border-t border-gray-700 hover:bg-gray-800 transition-colors flex items-center gap-3 text-gray-300 hover:text-white"
-        >
-          <span className="material-icons">home</span>
-          {sidebarOpen && <span>Volver al sitio</span>}
-        </Link>
+          {/* Volver al sitio */}
+          <Link
+            href="/"
+            className="w-full p-4 border-t border-gray-700 hover:bg-gray-800 transition-colors flex items-center gap-3 text-gray-300 hover:text-white"
+          >
+            <span className="material-icons">home</span>
+            {sidebarOpen && <span>Volver al sitio</span>}
+          </Link>
+        </div>
       </aside>
 
-      {/* Main content */}
-      <main className="flex-1 overflow-auto">
+      {/* Main content - with margin to avoid sidebar overlap */}
+      <main className={`flex-1 overflow-auto ${sidebarOpen ? 'ml-64' : 'ml-20'} transition-all duration-300`}>
         {/* Top bar */}
-        <header className="bg-white shadow-sm p-4 flex items-center justify-between">
+        <header className="bg-white shadow-sm p-4 flex items-center justify-between sticky top-0 z-10">
           <div>
             <h1 className="text-xl font-semibold text-brown-800">
               Panel de Administración
