@@ -497,13 +497,17 @@ export const statsDB = {
     const todayOrders = ordersTodayRes.data || [];
     const products = productsRes.data || [];
     
+    // Filtrar pedidos cancelados para cálculos de ingresos
+    const ordersForRevenue = allOrders.filter(o => o.estado !== 'cancelado');
+    const todayOrdersForRevenue = todayOrders.filter(o => o.estado !== 'cancelado');
+    
     return {
       data: {
         totalOrders: allOrders.length,
         pendingOrders: allOrders.filter(o => o.estado === 'preparando' || o.estado === 'listo').length,
         todayOrders: todayOrders.length,
-        totalRevenue: allOrders.reduce((sum, o) => sum + (o.total || 0), 0),
-        todayRevenue: todayOrders.reduce((sum, o) => sum + (o.total || 0), 0),
+        totalRevenue: ordersForRevenue.reduce((sum, o) => sum + (o.total || 0), 0),
+        todayRevenue: todayOrdersForRevenue.reduce((sum, o) => sum + (o.total || 0), 0),
         totalProducts: products.length,
         lowStockProducts: products.filter(p => p.stock < 10).length,
         totalCustomers: usersRes.data?.length || 0,
