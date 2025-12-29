@@ -53,7 +53,7 @@ export const authService = {
 
   // Login con Supabase Auth
   login: async (email: string, password: string) => {
-    console.log('🔑 authService.login llamado con:', email);
+    // Log removido por seguridad
     
     try {
       // Timeout de 10 segundos para evitar que se quede colgado
@@ -73,7 +73,7 @@ export const authService = {
         throw error;
       }
       
-      console.log('✅ Auth exitoso, user:', data?.user?.id);
+      // Auth exitoso
 
       // Obtener datos adicionales del usuario desde public.users
       if (data?.user) {
@@ -85,7 +85,7 @@ export const authService = {
           .eq('id', data.user.id)
           .single();
 
-        console.log('📋 Resultado de búsqueda:', { userData, userError });
+        // Búsqueda completada
 
         // Si no existe el usuario en public.users, crearlo
         if (userError && userError.code === 'PGRST116') {
@@ -117,7 +117,7 @@ export const authService = {
               rol: 'cliente',
             } as any;
           } else {
-            console.log('✅ Usuario creado en public.users:', newUser);
+            // Usuario creado
             userData = newUser;
           }
         } else if (userError) {
@@ -133,7 +133,7 @@ export const authService = {
           } as any;
         }
 
-        console.log('✅ Retornando userData:', userData);
+        // Retornando datos de usuario
         return { ...data, userData };
       }
 

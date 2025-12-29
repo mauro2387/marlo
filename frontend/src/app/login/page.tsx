@@ -22,11 +22,10 @@ function LoginForm() {
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get('redirect') || '/productos';
 
-  // Lista de emails de admin
-  const adminEmails = ['admin@marlocookies.com', 'antorivero.work@gmail.com', 'maurohernandez5678@gmail.com'];
-  
+  // Verificar si es admin basándose SOLO en el rol de la base de datos
+  // NO usar lista hardcodeada de emails por seguridad
   const checkIsAdmin = (email?: string, rol?: string) => {
-    return rol === 'admin' || adminEmails.includes(email || '');
+    return rol === 'admin';
   };
 
   // Si ya está autenticado correctamente, redirigir

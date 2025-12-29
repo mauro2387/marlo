@@ -5,6 +5,9 @@
 const SUPABASE_URL = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim().replace(/[\r\n]/g, '');
 const SUPABASE_ANON_KEY = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim().replace(/[\r\n]/g, '');
 
+// Debug mode solo en desarrollo
+const DEBUG = process.env.NODE_ENV === 'development';
+
 interface FetchOptions {
   method?: 'GET' | 'POST' | 'PATCH' | 'DELETE';
   body?: any;
@@ -72,7 +75,7 @@ async function supabaseFetch<T>(
 
   try {
     const url = `${SUPABASE_URL}/rest/v1/${endpoint}`;
-    console.log(`🔗 Supabase ${options.method || 'GET'}: ${endpoint}`);
+    if (DEBUG) console.log(`🔗 Supabase ${options.method || 'GET'}: ${endpoint}`);
     
     const response = await fetch(url, {
       method: options.method || 'GET',
@@ -85,15 +88,15 @@ async function supabaseFetch<T>(
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({ message: response.statusText }));
-      console.error(`❌ Supabase error (${options.method || 'GET'} ${endpoint}):`, error);
+      if (DEBUG) console.error(`❌ Supabase error (${options.method || 'GET'} ${endpoint}):`, error);
       return { data: null, error, count };
     }
 
     const data = await response.json();
-    console.log(`✅ Supabase ${options.method || 'GET'} ${endpoint}: OK`, Array.isArray(data) ? `(${data.length} items)` : '');
+    if (DEBUG) console.log(`✅ Supabase ${options.method || 'GET'} ${endpoint}: OK`, Array.isArray(data) ? `(${data.length} items)` : '');
     return { data, error: null, count };
   } catch (error: any) {
-    console.error(`❌ Supabase fetch error:`, error);
+    if (DEBUG) console.error(`❌ Supabase fetch error:`, error);
     return { data: null, error: { message: error.message } };
   }
 }
@@ -152,7 +155,7 @@ export const productsDB = {
 
   // Descontar stock de un producto
   decrementStock: async (id: string, quantity: number) => {
-    console.log(`📉 decrementStock llamado: id=${id}, quantity=${quantity}`);
+    if (DEBUG) console.log(`📉 decrementStock llamado: id=${id}, quantity=${quantity}`);
     
     // Usar import dinámico para el cliente de Supabase
     const { supabase } = await import('@/lib/supabase/client');
@@ -165,7 +168,7 @@ export const productsDB = {
       .single();
       
     if (fetchError || !product) {
-      console.error('❌ Error obteniendo producto para descontar stock:', fetchError, 'ID:', id);
+      if (DEBUG) console.error('❌ Error obteniendo producto para descontar stock:', fetchError, 'ID:', id);
       return { success: false, error: fetchError || 'Producto no encontrado' };
     }
     
@@ -173,7 +176,7 @@ export const productsDB = {
     const currentStock = productData.stock || 0;
     const newStock = Math.max(0, currentStock - quantity);
     
-    console.log(`📊 Stock: actual=${currentStock}, a descontar=${quantity}, nuevo=${newStock}`);
+    if (DEBUG) console.log(`📊 Stock: actual=${currentStock}, a descontar=${quantity}, nuevo=${newStock}`);
     
     // Usar el cliente de Supabase directamente para el update
     const { data: updateResult, error: updateError } = await supabase
@@ -183,14 +186,14 @@ export const productsDB = {
       .eq('id', id)
       .select();
     
-    console.log('📝 Resultado update:', { updateResult, updateError });
+    if (DEBUG) console.log('📝 Resultado update:', { updateResult, updateError });
     
     if (updateError) {
-      console.error('❌ Error actualizando stock:', updateError);
+      if (DEBUG) console.error('❌ Error actualizando stock:', updateError);
       return { success: false, error: updateError };
     }
     
-    console.log(`✅ Stock actualizado: ${productData.nombre} ${currentStock} -> ${newStock}`);
+    if (DEBUG) console.log(`✅ Stock actualizado: ${productData.nombre} ${currentStock} -> ${newStock}`);
     return { success: true, newStock, productName: productData.nombre };
   },
 
@@ -321,13 +324,13 @@ export const ordersDB = {
   },
   
   updateStatus: async (id: string, estado: string) => {
-    console.log(`Actualizando pedido ${id} a estado: ${estado}`);
+    if (DEBUG) console.log(`Actualizando pedido ${id} a estado: ${estado}`);
     const result = await supabaseFetch<any>(`orders?id=eq.${id}`, { 
       method: 'PATCH', 
       body: { estado },
       headers: { 'Prefer': 'return=representation' }
     });
-    console.log('Resultado actualización:', result);
+    if (DEBUG) console.log('Resultado actualización:', result);
     return result;
   },
   
