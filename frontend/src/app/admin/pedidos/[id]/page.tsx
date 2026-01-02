@@ -19,6 +19,9 @@ interface OrderItem {
 interface Order {
   id: string;
   user_id: string;
+  customer_name?: string;
+  customer_email?: string;
+  customer_phone?: string;
   subtotal: number;
   envio: number;
   descuento: number;
@@ -114,11 +117,11 @@ export default function OrderDetailPage() {
   const sendWhatsApp = () => {
     if (!order) return;
     
-    // Limpiar el número y agregar código de país si falta
-    let phone = (order.users?.telefono || '').replace(/\D/g, '');
+    // Priorizar customer_phone del pedido, luego el telefono del usuario
+    let phone = (order.customer_phone || order.users?.telefono || '').replace(/\D/g, '');
     
     if (!phone) {
-      alert('Este cliente no tiene número de teléfono registrado');
+      alert('Este pedido no tiene número de teléfono registrado');
       return;
     }
     
@@ -341,14 +344,14 @@ export default function OrderDetailPage() {
             <div className="space-y-3">
               <div>
                 <p className="font-medium text-brown-800">{customerName}</p>
-                <p className="text-gray-500 text-sm">{order.users?.email || 'Sin email'}</p>
+                <p className="text-gray-500 text-sm">{order.customer_email || order.users?.email || 'Sin email'}</p>
               </div>
-              {order.users?.telefono && (
+              {(order.customer_phone || order.users?.telefono) && (
                 <a 
-                  href={`tel:${order.users.telefono}`}
+                  href={`tel:${order.customer_phone || order.users?.telefono}`}
                   className="flex items-center gap-2 text-green-600 hover:underline"
                 >
-                  📱 {order.users.telefono}
+                  📱 {order.customer_phone || order.users?.telefono}
                 </a>
               )}
               {order.users?.puntos !== undefined && (
