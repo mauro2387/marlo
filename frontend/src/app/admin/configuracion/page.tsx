@@ -381,14 +381,27 @@ export default function ConfiguracionPage() {
   const handleSaveGoogleReviews = async () => {
     setSaving('google');
     try {
+      console.log('💾 Guardando Google Reviews:', {
+        google_rating: googleReviews.rating,
+        google_reviews_count: googleReviews.count,
+        google_reviews_url: googleReviews.url
+      });
+      
       const { error } = await siteSettingsDB.update({
         google_rating: googleReviews.rating,
         google_reviews_count: googleReviews.count,
         google_reviews_url: googleReviews.url
       });
-      if (error) throw error;
+      
+      if (error) {
+        console.error('❌ Error al guardar:', error);
+        throw error;
+      }
+      
+      console.log('✅ Google Reviews guardado correctamente');
       setMessage({ type: 'success', text: 'Google Reviews actualizado correctamente' });
     } catch (err: any) {
+      console.error('❌ Error:', err);
       setMessage({ type: 'error', text: err?.message || 'Error al guardar' });
     } finally {
       setSaving(null);
