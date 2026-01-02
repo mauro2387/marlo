@@ -104,6 +104,14 @@ export default function ConfiguracionPage() {
     count: 21,
     url: 'https://www.google.com/search?kgmid=/g/11ybpp3pv9#lrd=0x9575110030adacd1:0x62e6dd03788fee45,1'
   });
+  const [googleReviewsLive, setGoogleReviewsLive] = useState({
+    rating: 0,
+    count: 0,
+    url: '',
+    last_updated: '',
+    loading: false,
+    error: ''
+  });
 
   // Configuración de Cupones de Cumpleaños
   const [birthdayConfig, setBirthdayConfig] = useState({
@@ -366,6 +374,45 @@ export default function ConfiguracionPage() {
     } finally {
       setSaving(null);
       setTimeout(() => setMessage(null), 3000);
+    }
+  };
+
+  // Cargar Google Reviews desde la API en tiempo real
+  const handleLoadLiveReviews = async () => {
+    setGoogleReviewsLive(prev => ({ ...prev, loading: true, error: '' }));
+    try {
+      const response = await fetch('/api/google-reviews');
+      const data = await response.json();
+      
+      if (data.rating && data.reviews_count) {
+        setGoogleReviewsLive({
+          rating: data.rating,
+          count: data.reviews_count,
+          url: data.url,
+          last_updated: data.last_updated,
+          loading: false,
+          error: data.error || ''
+        });
+        
+        // Actualizar los valores de fallback con los datos actuales
+        setGoogleReviews({
+          rating: data.rating,
+          count: data.reviews_count,
+          url: data.url
+        });
+        
+        setMessage({ 
+          type: 'success', 
+          text: `✅ Reviews actualizados: ${data.rating} ⭐ (${data.reviews_count} reseñas)${data.cached ? ' [Cache]' : ' [En vivo]'}` 
+        });
+      } else {
+        throw new Error(data.error || 'No se pudo obtener datos');
+      }
+    } catch (err: any) {
+      setGoogleReviewsLive(prev => ({ ...prev, loading: false, error: err.message }));
+      setMessage({ type: 'error', text: `Error: ${err.message}` });
+    } finally {
+      setTimeout(() => setMessage(null), 5000);
     }
   };
 
@@ -1073,16 +1120,53 @@ export default function ConfiguracionPage() {
           <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
             ⭐ Google Reviews (API en Tiempo Real)
           </h3>
-          <a 
-            href="https://www.google.com/search?q=marlo+cookies"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm text-blue-500 hover:text-blue-700 flex items-center gap-1"
-          >
-            Ver en Google
-            <span className="material-icons text-sm">open_in_new</span>
-          </a>
+          <div className="flex gap-2">
+            <button
+              onClick={handleLoadLiveReviews}
+              disabled={googleReviewsLive.loading}
+              className="text-sm bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 disabled:opacity-50 flex items-center gap-2"
+            >
+              <span className="material-icons text-sm">{googleReviewsLive.loading ? 'hourglass_empty' : 'refresh'}</span>
+              {googleReviewsLive.loading ? 'Cargando...' : 'Actualizar desde API'}
+            </button>
+            <a 
+              href={googleReviews.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-blue-500 hover:text-blue-700 flex items-center gap-1 px-4 py-2"
+            >
+              Ver en Google
+              <span className="material-icons text-sm">open_in_new</span>
+            </a>
+          </div>
         </div>
+        
+        {googleReviewsLive.rating > 0 && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+            <p className="text-sm text-blue-700 font-semibold mb-2">
+              📊 Valores actuales desde Google API:
+            </p>
+            <div className="flex items-center gap-4">
+              <div className="flex gap-0.5">
+                {[...Array(5)].map((_, i) => (
+                  <svg key={i} className="w-5 h-5" fill={i < Math.floor(googleReviewsLive.rating) ? "#FBBC04" : "#E5E7EB"} viewBox="0 0 24 24">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                  </svg>
+                ))}
+              </div>
+              <span className="font-bold text-lg">{googleReviewsLive.rating.toFixed(1)}</span>
+              <span className="text-gray-600">({googleReviewsLive.count} reseñas)</span>
+              {googleReviewsLive.last_updated && (
+                <span className="text-xs text-gray-500">
+                  Actualizado: {new Date(googleReviewsLive.last_updated).toLocaleString('es-UY')}
+                </span>
+              )}
+            </div>
+            {googleReviewsLive.error && (
+              <p className="text-xs text-orange-600 mt-2">⚠️ {googleReviewsLive.error}</p>
+            )}
+          </div>
+        )}
         
         <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
           <p className="text-sm text-green-700">

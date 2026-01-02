@@ -689,7 +689,7 @@ export default function AdminPedidosPage() {
                   <p className="text-sm text-gray-600">{customerEmail}</p>
                   {customerPhone && (
                     <a 
-                      href={`https://wa.me/${customerPhone.replace(/\D/g, '')}`}
+                      href={`https://wa.me/598${customerPhone.replace(/\D/g, '')}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-sm text-green-600 hover:underline flex items-center gap-1"
