@@ -935,7 +935,6 @@ function CheckoutContent() {
                     <p className="text-brown-600">
                       MarLo Cookies<br />
                       Maldonado, Uruguay<br />
-                      <span className="text-sm text-gray-500">Te enviaremos la ubicación exacta por WhatsApp</span>
                     </p>
                   </div>
                 )}
