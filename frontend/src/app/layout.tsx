@@ -55,6 +55,7 @@ export default function RootLayout({
     <html lang="es" className={`${nunito.variable} ${pacifico.variable}`} suppressHydrationWarning>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+        <meta name="facebook-domain-verification" content="2zn6l14wjy6jown8n8oqrlrip6ywkq" />
         <link
           href="https://fonts.googleapis.com/icon?family=Material+Icons"
           rel="stylesheet"
