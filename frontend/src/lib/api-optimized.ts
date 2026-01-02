@@ -155,6 +155,9 @@ export const ordersAPI = {
     // Preparar datos con nombres de columnas correctos según esquema DB
     const orderPayload = {
       user_id: userId,
+      customer_name: orderData.customer_name || 'Cliente',
+      customer_email: orderData.customer_email || '',
+      customer_phone: orderData.customer_phone || '',
       subtotal: orderData.subtotal,
       envio: orderData.shipping_cost || 0,
       descuento: (orderData.discount_coupon || 0) + (orderData.discount_points || 0),

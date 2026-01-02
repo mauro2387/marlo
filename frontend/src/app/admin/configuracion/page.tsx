@@ -180,6 +180,25 @@ export default function ConfiguracionPage() {
             url: settingsRes.data.google_reviews_url || googleReviews.url
           });
         }
+        
+        // Cargar reviews en vivo automáticamente
+        setTimeout(() => {
+          fetch('/api/google-reviews')
+            .then(res => res.json())
+            .then(data => {
+              if (data.rating && data.reviews_count) {
+                setGoogleReviewsLive({
+                  rating: data.rating,
+                  count: data.reviews_count,
+                  url: data.url,
+                  last_updated: data.last_updated,
+                  loading: false,
+                  error: data.error || ''
+                });
+              }
+            })
+            .catch(err => console.log('Error cargando reviews en vivo:', err));
+        }, 500);
 
         // Cargar configuración de cumpleaños
         if (settingsRes.data.birthday_config) {
@@ -395,15 +414,27 @@ export default function ConfiguracionPage() {
         });
         
         // Actualizar los valores de fallback con los datos actuales
-        setGoogleReviews({
+        const newValues = {
           rating: data.rating,
           count: data.reviews_count,
           url: data.url
+        };
+        setGoogleReviews(newValues);
+        
+        // Guardar automáticamente en la base de datos
+        const { error: saveError } = await siteSettingsDB.update({
+          google_rating: newValues.rating,
+          google_reviews_count: newValues.count,
+          google_reviews_url: newValues.url
         });
+        
+        if (saveError) {
+          console.error('Error guardando reviews:', saveError);
+        }
         
         setMessage({ 
           type: 'success', 
-          text: `✅ Reviews actualizados: ${data.rating} ⭐ (${data.reviews_count} reseñas)${data.cached ? ' [Cache]' : ' [En vivo]'}` 
+          text: `✅ Reviews actualizados y guardados: ${data.rating} ⭐ (${data.reviews_count} reseñas)${data.cached ? ' [Cache]' : ' [En vivo]'}` 
         });
       } else {
         throw new Error(data.error || 'No se pudo obtener datos');
