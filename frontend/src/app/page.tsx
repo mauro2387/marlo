@@ -189,10 +189,26 @@ export default function Home() {
     loadSiteSettings();
   }, []);
 
-  // Cargar Google Reviews desde la API de Google (tiempo real)
+  // Cargar Google Reviews desde la base de datos (valores guardados por el admin)
   useEffect(() => {
     const loadGoogleReviews = async () => {
       try {
+        // Primero intentar cargar desde la base de datos (valores configurados por el admin)
+        const { data: settings } = await siteSettingsDB.get();
+        
+        if (settings && (settings.google_rating || settings.google_reviews_count)) {
+          const reviewsFromDB = {
+            rating: settings.google_rating || 4.9,
+            count: settings.google_reviews_count || 21,
+            url: settings.google_reviews_url || googleReviews.url
+          };
+          
+          setGoogleReviews(reviewsFromDB);
+          console.log('⭐ Google Reviews cargado desde DB:', reviewsFromDB.rating, 'estrellas,', reviewsFromDB.count, 'reseñas');
+          return;
+        }
+        
+        // Si no hay valores en la DB, intentar la API como fallback
         const response = await fetch('/api/google-reviews');
         const data = await response.json();
         if (data.rating && data.reviews_count) {
@@ -201,7 +217,7 @@ export default function Home() {
             count: data.reviews_count,
             url: data.url || googleReviews.url
           });
-          console.log('⭐ Google Reviews cargado:', data.rating, 'estrellas,', data.reviews_count, 'reseñas', data.cached ? '(cache)' : '(live)');
+          console.log('⭐ Google Reviews cargado desde API:', data.rating, 'estrellas,', data.reviews_count, 'reseñas');
         }
       } catch (err) {
         console.log('Usando Google Reviews por defecto');
