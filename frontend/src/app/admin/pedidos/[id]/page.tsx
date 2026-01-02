@@ -114,7 +114,19 @@ export default function OrderDetailPage() {
   const sendWhatsApp = () => {
     if (!order) return;
     
-    const phone = (order.users?.telefono || '').replace(/\D/g, '');
+    // Limpiar el número y agregar código de país si falta
+    let phone = (order.users?.telefono || '').replace(/\D/g, '');
+    
+    if (!phone) {
+      alert('Este cliente no tiene número de teléfono registrado');
+      return;
+    }
+    
+    // Si no empieza con 598 (Uruguay), agregarlo
+    if (!phone.startsWith('598')) {
+      phone = '598' + phone;
+    }
+    
     const itemsList = order.order_items
       .map(item => `• ${item.cantidad}x ${item.nombre}`)
       .join('%0A');

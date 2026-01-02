@@ -247,12 +247,24 @@ export default function ClientesAdminPage() {
               </div>
             </div>
 
-            <button
-              onClick={() => setSelectedCliente(null)}
-              className="w-full mt-4 bg-pink-500 text-white py-2 rounded-lg hover:bg-pink-600 transition-colors"
-            >
-              Cerrar
-            </button>
+            <div className="flex gap-2 mt-4">
+              {selectedCliente.telefono && (
+                <a
+                  href={`https://wa.me/598${selectedCliente.telefono.replace(/\D/g, '')}?text=Hola ${selectedCliente.nombre}, te escribimos de MarLo Cookies 🍪`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 bg-green-500 text-white py-2 rounded-lg hover:bg-green-600 transition-colors text-center flex items-center justify-center gap-2"
+                >
+                  <span>💬 WhatsApp</span>
+                </a>
+              )}
+              <button
+                onClick={() => setSelectedCliente(null)}
+                className="flex-1 bg-pink-500 text-white py-2 rounded-lg hover:bg-pink-600 transition-colors"
+              >
+                Cerrar
+              </button>
+            </div>
           </div>
         </div>
       )}
