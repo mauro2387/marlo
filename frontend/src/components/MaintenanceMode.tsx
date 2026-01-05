@@ -48,14 +48,14 @@ export default function MaintenanceMode() {
           </p>
         </div>
 
-        {/* Redes sociales (si las tienen configuradas) */}
+        {/* Redes sociales */}
         <div className="mt-8 pt-8 border-t border-gray-200">
           <p className="text-sm text-gray-500 mb-4">
             Mantente al tanto de nuestras novedades:
           </p>
           <div className="flex justify-center gap-4">
             <a 
-              href="https://www.instagram.com/marlocookies" 
+              href="https://www.instagram.com/marlo_cookies/?hl=es" 
               target="_blank" 
               rel="noopener noreferrer"
               className="text-pink-500 hover:text-pink-600 transition-colors"
@@ -65,7 +65,7 @@ export default function MaintenanceMode() {
               </svg>
             </a>
             <a 
-              href="https://www.facebook.com/marlocookies" 
+              href="https://www.facebook.com/profile.php?id=61580225619685" 
               target="_blank" 
               rel="noopener noreferrer"
               className="text-pink-500 hover:text-pink-600 transition-colors"
