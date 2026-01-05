@@ -7,6 +7,7 @@ import ActiveOrderBanner from '@/components/ActiveOrderBanner';
 import CookieBanner from '@/components/CookieBanner';
 import { AuthProvider } from '@/components/AuthProvider';
 import MetaPixel from '@/components/MetaPixel';
+import MaintenanceMode from '@/components/MaintenanceMode';
 
 const nunito = Nunito({
   subsets: ['latin'],
@@ -51,6 +52,8 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const isMaintenanceMode = process.env.NEXT_PUBLIC_MAINTENANCE_MODE === 'true';
+
   return (
     <html lang="es" className={`${nunito.variable} ${pacifico.variable}`} suppressHydrationWarning>
       <head>
@@ -67,13 +70,17 @@ export default function RootLayout({
       </head>
       <body className={nunito.className} suppressHydrationWarning>
         <MetaPixel />
-        <AuthProvider>
-          {children}
-          <MiniCart />
-          <NotificationContainer />
-          <ActiveOrderBanner />
-          <CookieBanner />
-        </AuthProvider>
+        {isMaintenanceMode ? (
+          <MaintenanceMode />
+        ) : (
+          <AuthProvider>
+            {children}
+            <MiniCart />
+            <NotificationContainer />
+            <ActiveOrderBanner />
+            <CookieBanner />
+          </AuthProvider>
+        )}
       </body>
     </html>
   );
