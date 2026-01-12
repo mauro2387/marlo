@@ -342,6 +342,14 @@ export const ordersDB = {
     });
   },
   
+  confirmPayment: async (id: string) => {
+    return supabaseFetch<any>(`orders?id=eq.${id}`, { 
+      method: 'PATCH', 
+      body: { estado: 'preparando' },
+      headers: { 'Prefer': 'return=representation' }
+    });
+  },
+  
   update: async (id: string, data: any) => {
     return supabaseFetch<any>(`orders?id=eq.${id}`, { 
       method: 'PATCH', 

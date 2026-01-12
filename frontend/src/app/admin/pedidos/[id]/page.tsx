@@ -100,6 +100,26 @@ export default function OrderDetailPage() {
     }
   };
 
+  const confirmPayment = async () => {
+    if (!order) return;
+    if (!confirm('¿Confirmar que el pago fue recibido? El pedido pasará a "Preparando".')) {
+      return;
+    }
+    
+    setUpdating(true);
+    try {
+      const { error } = await ordersDB.confirmPayment(order.id);
+      if (error) throw error;
+      setOrder({ ...order, estado: 'preparando' });
+      alert('✅ Pago confirmado. El pedido está ahora en "Preparando".');
+    } catch (err) {
+      console.error('Error confirmando pago:', err);
+      alert('Error al confirmar el pago');
+    } finally {
+      setUpdating(false);
+    }
+  };
+
   const getNextStatus = (currentStatus: string) => {
     const esRetiro = order?.tipo_entrega === 'retiro' || order?.direccion === 'Retiro en local';
     const flow = esRetiro ? statusFlowRetiro : statusFlowDelivery;
@@ -404,6 +424,23 @@ export default function OrderDetailPage() {
               <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                 <p className="text-xs text-blue-600 mb-1">Alias de transferencia:</p>
                 <p className="font-semibold text-blue-800">{(order as any).transfer_alias}</p>
+              </div>
+            )}
+            
+            {/* Botón confirmar pago MercadoPago */}
+            {order.metodo_pago === 'mercadopago' && order.estado === 'pendiente_pago' && (
+              <div className="mt-4">
+                <button
+                  onClick={confirmPayment}
+                  disabled={updating}
+                  className="w-full py-2 bg-orange-500 text-white rounded-lg font-medium hover:bg-orange-600 disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  <span className="material-icons text-sm">check_circle</span>
+                  {updating ? 'Confirmando...' : 'Confirmar Pago Recibido'}
+                </button>
+                <p className="text-xs text-gray-500 mt-2 text-center">
+                  Usa este botón si verificaste el pago en MercadoPago
+                </p>
               </div>
             )}
           </div>

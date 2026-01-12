@@ -410,6 +410,32 @@ export default function AdminPedidosPage() {
     }
   };
 
+  // Confirmar pago recibido (para MercadoPago)
+  const confirmPayment = async (orderId: string) => {
+    if (!confirm('¿Confirmar que el pago fue recibido? El pedido pasará a "Preparando".')) {
+      return;
+    }
+    
+    setUpdating(orderId);
+    try {
+      const { error } = await ordersDB.confirmPayment(orderId);
+      
+      if (error) throw error;
+      
+      setOrders(prev => prev.map(o => 
+        o.id === orderId ? { ...o, estado: 'preparando' } : o
+      ));
+      
+      // Mostrar mensaje de éxito
+      alert('✅ Pago confirmado. El pedido está ahora en "Preparando".');
+    } catch (err: any) {
+      console.error('Error confirmando pago:', err);
+      alert('Error al confirmar el pago');
+    } finally {
+      setUpdating(null);
+    }
+  };
+
   // Test de sonido
   const testSound = () => {
     unlockAudio();
@@ -779,6 +805,23 @@ export default function AdminPedidosPage() {
                           {updating === order.id ? 'Confirmando...' : 'Confirmar Transferencia'}
                         </button>
                       )}
+                    </div>
+                  )}
+                  
+                  {/* Botón de confirmar pago MercadoPago */}
+                  {paymentMethod === 'mercadopago' && order.estado === 'pendiente_pago' && (
+                    <div className="mb-3">
+                      <button
+                        onClick={() => confirmPayment(order.id)}
+                        disabled={updating === order.id}
+                        className="flex items-center gap-1 text-xs bg-orange-100 text-orange-800 hover:bg-orange-200 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50 w-full justify-center"
+                      >
+                        <span className="material-icons text-sm">check_circle</span>
+                        {updating === order.id ? 'Confirmando...' : 'Confirmar Pago Recibido'}
+                      </button>
+                      <p className="text-xs text-gray-500 mt-1 text-center">
+                        Confirma manualmente si verificaste el pago en MP
+                      </p>
                     </div>
                   )}
                   
