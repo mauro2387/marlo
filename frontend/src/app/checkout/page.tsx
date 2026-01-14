@@ -127,6 +127,10 @@ function CheckoutContent() {
   const [deliveryNotice, setDeliveryNotice] = useState<{ enabled: boolean; message: string }>({ enabled: false, message: '' });
   const [deliveryBlockedToday, setDeliveryBlockedToday] = useState(false);
   
+  // Hora límite para delivery
+  const [deliveryTimeLimit, setDeliveryTimeLimit] = useState<{ enabled: boolean; time: string; message: string }>({ enabled: false, time: '21:00', message: '' });
+  const [deliveryBlockedByTime, setDeliveryBlockedByTime] = useState(false);
+  
   // Form
   const [formData, setFormData] = useState<FormData>({
     nombre: '',
@@ -217,6 +221,26 @@ function CheckoutContent() {
       // Cargar leyenda de delivery
       if (settings?.delivery_notice) {
         setDeliveryNotice(settings.delivery_notice);
+      }
+
+      // Cargar y validar hora límite de delivery
+      if (settings?.delivery_time_limit) {
+        setDeliveryTimeLimit(settings.delivery_time_limit);
+        
+        if (settings.delivery_time_limit.enabled) {
+          const now = new Date();
+          const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+          const limitTime = settings.delivery_time_limit.time;
+          
+          // Comparar hora actual con hora límite
+          const isAfterLimit = currentTime > limitTime;
+          setDeliveryBlockedByTime(isAfterLimit);
+          
+          // Si está después de la hora límite y hay productos que requieren delivery, forzar retiro
+          if (isAfterLimit && tipoEntrega === 'delivery') {
+            setTipoEntrega('retiro');
+          }
+        }
       }
       
       setLoading(false);
@@ -785,14 +809,31 @@ function CheckoutContent() {
                     </div>
                   </div>
                 )}
+
+                {/* Advertencia de hora límite de delivery */}
+                {deliveryBlockedByTime && !hayProductosSoloRetiro && deliveryTimeLimit.enabled && (
+                  <div className="mb-4 p-4 bg-amber-50 border-2 border-amber-300 rounded-lg">
+                    <div className="flex items-start gap-3">
+                      <span className="text-2xl">🕐</span>
+                      <div className="flex-1">
+                        <p className="font-semibold text-amber-900 mb-1">
+                          {deliveryTimeLimit.message}
+                        </p>
+                        <p className="text-sm text-amber-800">
+                          Ya pasó el horario límite para delivery. Puedes seleccionar retiro en local sin costo adicional
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
                 
                 <div className="grid grid-cols-2 gap-4 mb-4">
                   <button
                     type="button"
-                    onClick={() => !(hayProductosSoloRetiro || deliveryBlockedToday) && setTipoEntrega('delivery')}
-                    disabled={hayProductosSoloRetiro || deliveryBlockedToday}
+                    onClick={() => !(hayProductosSoloRetiro || deliveryBlockedToday || deliveryBlockedByTime) && setTipoEntrega('delivery')}
+                    disabled={hayProductosSoloRetiro || deliveryBlockedToday || deliveryBlockedByTime}
                     className={`p-4 rounded-lg border-2 transition-all ${
-                      (hayProductosSoloRetiro || deliveryBlockedToday)
+                      (hayProductosSoloRetiro || deliveryBlockedToday || deliveryBlockedByTime)
                         ? 'border-gray-200 bg-gray-100 opacity-50 cursor-not-allowed'
                         : tipoEntrega === 'delivery'
                           ? 'border-pink-500 bg-pink-50'
@@ -802,7 +843,7 @@ function CheckoutContent() {
                     <div className="text-2xl mb-2">🚗</div>
                     <div className="font-semibold">Delivery</div>
                     <div className="text-sm text-gray-500">
-                      {(hayProductosSoloRetiro || deliveryBlockedToday) ? 'No disponible hoy' : 'Te lo llevamos'}
+                      {(hayProductosSoloRetiro || deliveryBlockedToday || deliveryBlockedByTime) ? 'No disponible ahora' : 'Te lo llevamos'}
                     </div>
                   </button>
                   

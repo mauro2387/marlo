@@ -147,6 +147,13 @@ export default function ConfiguracionPage() {
     day_index: 3
   });
 
+  // Hora límite para delivery
+  const [deliveryTimeLimit, setDeliveryTimeLimit] = useState({
+    enabled: true,
+    time: '21:00',
+    message: 'Delivery disponible hasta las 21:00hs'
+  });
+
   useEffect(() => {
     fetchData();
   }, []);
@@ -236,6 +243,11 @@ export default function ConfiguracionPage() {
         // Cargar leyenda de delivery
         if (settingsRes.data.delivery_notice) {
           setDeliveryNotice(settingsRes.data.delivery_notice);
+        }
+
+        // Cargar hora límite de delivery
+        if (settingsRes.data.delivery_time_limit) {
+          setDeliveryTimeLimit(settingsRes.data.delivery_time_limit);
         }
         
         // Productos seleccionados para el banner
@@ -516,10 +528,11 @@ export default function ConfiguracionPage() {
     try {
       const { error } = await siteSettingsDB.update({
         blocked_delivery_days: blockedDeliveryDays,
-        delivery_notice: deliveryNotice
+        delivery_notice: deliveryNotice,
+        delivery_time_limit: deliveryTimeLimit
       });
       if (error) throw error;
-      setMessage({ type: 'success', text: 'Configuración de días sin delivery guardada' });
+      setMessage({ type: 'success', text: 'Configuración de delivery guardada correctamente' });
     } catch (err: any) {
       setMessage({ type: 'error', text: err?.message || 'Error al guardar' });
     } finally {
@@ -1314,6 +1327,56 @@ export default function ConfiguracionPage() {
               <p className="text-xs text-blue-600">
                 💡 Este mensaje se mostrará en el checkout cuando el cliente intente seleccionar delivery
               </p>
+            </div>
+          )}
+        </div>
+
+        {/* Hora límite de delivery */}
+        <div className="bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-200 rounded-lg p-4 mb-4">
+          <div className="flex items-start gap-3 mb-3">
+            <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
+              <input
+                type="checkbox"
+                checked={deliveryTimeLimit.enabled}
+                onChange={(e) => setDeliveryTimeLimit(prev => ({ ...prev, enabled: e.target.checked }))}
+                className="sr-only peer"
+              />
+              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-500"></div>
+            </label>
+            <div className="flex-1">
+              <h4 className="font-medium text-sm text-indigo-900 mb-1 flex items-center gap-2">
+                🕐 Horario límite de delivery
+              </h4>
+              <p className="text-xs text-indigo-700 mb-3">
+                Configura hasta qué hora se aceptan pedidos con delivery
+              </p>
+            </div>
+          </div>
+
+          {deliveryTimeLimit.enabled && (
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-medium text-indigo-900 mb-1">Hora límite</label>
+                <input
+                  type="time"
+                  value={deliveryTimeLimit.time}
+                  onChange={(e) => setDeliveryTimeLimit(prev => ({ ...prev, time: e.target.value }))}
+                  className="w-full px-3 py-2 bg-white border border-indigo-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500"
+                />
+                <p className="text-xs text-indigo-600 mt-1">
+                  💡 Después de esta hora, solo estará disponible retiro en local
+                </p>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-indigo-900 mb-1">Mensaje para clientes</label>
+                <input
+                  type="text"
+                  value={deliveryTimeLimit.message}
+                  onChange={(e) => setDeliveryTimeLimit(prev => ({ ...prev, message: e.target.value }))}
+                  placeholder="Ej: Delivery disponible hasta las 21:00hs"
+                  className="w-full px-3 py-2 bg-white border border-indigo-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
             </div>
           )}
         </div>
