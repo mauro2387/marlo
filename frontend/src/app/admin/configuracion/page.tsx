@@ -124,6 +124,29 @@ export default function ConfiguracionPage() {
     email_body: '¡Feliz cumpleaños! 🎉 Disfruta de un %VALUE%% de descuento en tu próxima compra. Usa el código: %CODE%'
   });
 
+  // Días bloqueados para delivery
+  const [blockedDeliveryDays, setBlockedDeliveryDays] = useState<Array<{
+    day_index: number;
+    day_name: string;
+    blocked: boolean;
+    reason?: string;
+  }>>([
+    { day_index: 0, day_name: 'Domingo', blocked: false },
+    { day_index: 1, day_name: 'Lunes', blocked: false },
+    { day_index: 2, day_name: 'Martes', blocked: false },
+    { day_index: 3, day_name: 'Miércoles', blocked: true, reason: 'Descanso del equipo' },
+    { day_index: 4, day_name: 'Jueves', blocked: false },
+    { day_index: 5, day_name: 'Viernes', blocked: false },
+    { day_index: 6, day_name: 'Sábado', blocked: false },
+  ]);
+
+  // Leyenda personalizable de delivery
+  const [deliveryNotice, setDeliveryNotice] = useState({
+    enabled: true,
+    message: 'Los miércoles no hay delivery',
+    day_index: 3
+  });
+
   useEffect(() => {
     fetchData();
   }, []);
@@ -203,6 +226,16 @@ export default function ConfiguracionPage() {
         // Cargar configuración de cumpleaños
         if (settingsRes.data.birthday_config) {
           setBirthdayConfig(settingsRes.data.birthday_config);
+        }
+
+        // Cargar días bloqueados para delivery
+        if (settingsRes.data.blocked_delivery_days && settingsRes.data.blocked_delivery_days.length > 0) {
+          setBlockedDeliveryDays(settingsRes.data.blocked_delivery_days);
+        }
+
+        // Cargar leyenda de delivery
+        if (settingsRes.data.delivery_notice) {
+          setDeliveryNotice(settingsRes.data.delivery_notice);
         }
         
         // Productos seleccionados para el banner
@@ -475,6 +508,38 @@ export default function ConfiguracionPage() {
       setSaving(null);
       setTimeout(() => setMessage(null), 3000);
     }
+  };
+
+  // Guardar días bloqueados de delivery
+  const handleSaveBlockedDays = async () => {
+    setSaving('blocked_days');
+    try {
+      const { error } = await siteSettingsDB.update({
+        blocked_delivery_days: blockedDeliveryDays,
+        delivery_notice: deliveryNotice
+      });
+      if (error) throw error;
+      setMessage({ type: 'success', text: 'Configuración de días sin delivery guardada' });
+    } catch (err: any) {
+      setMessage({ type: 'error', text: err?.message || 'Error al guardar' });
+    } finally {
+      setSaving(null);
+      setTimeout(() => setMessage(null), 3000);
+    }
+  };
+
+  // Toggle día bloqueado
+  const handleToggleBlockedDay = (dayIndex: number) => {
+    setBlockedDeliveryDays(prev => prev.map(day => 
+      day.day_index === dayIndex ? { ...day, blocked: !day.blocked } : day
+    ));
+  };
+
+  // Actualizar razón de día bloqueado
+  const handleUpdateDayReason = (dayIndex: number, reason: string) => {
+    setBlockedDeliveryDays(prev => prev.map(day => 
+      day.day_index === dayIndex ? { ...day, reason } : day
+    ));
   };
 
   // Quitar producto del banner
@@ -1156,6 +1221,111 @@ export default function ConfiguracionPage() {
             </div>
           </div>
         )}
+      </div>
+
+      {/* Días Sin Delivery */}
+      <div className="bg-white rounded-xl shadow-md p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+            🚫 Días Sin Delivery
+          </h3>
+        </div>
+        
+        <p className="text-sm text-gray-500 mb-6">
+          Configura qué días de la semana NO hay servicio de delivery. Los clientes no podrán seleccionar delivery en estos días.
+        </p>
+
+        <div className="space-y-3 mb-6">
+          {blockedDeliveryDays.map((day) => (
+            <div 
+              key={day.day_index}
+              className={`border rounded-lg p-4 transition-all ${
+                day.blocked ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-gray-50'
+              }`}
+            >
+              <div className="flex items-start gap-4">
+                {/* Toggle bloqueado */}
+                <label className="relative inline-flex items-center cursor-pointer flex-shrink-0 mt-1">
+                  <input
+                    type="checkbox"
+                    checked={day.blocked}
+                    onChange={() => handleToggleBlockedDay(day.day_index)}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-500"></div>
+                </label>
+
+                <div className="flex-1">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-medium text-sm">{day.day_name}</span>
+                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                      day.blocked 
+                        ? 'bg-red-100 text-red-700' 
+                        : 'bg-green-100 text-green-700'
+                    }`}>
+                      {day.blocked ? '🚫 Sin delivery' : '✅ Con delivery'}
+                    </span>
+                  </div>
+
+                  {day.blocked && (
+                    <input
+                      type="text"
+                      value={day.reason || ''}
+                      onChange={(e) => handleUpdateDayReason(day.day_index, e.target.value)}
+                      placeholder="Motivo (opcional): Ej: Descanso del equipo, Mantenimiento"
+                      className="w-full px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-sm"
+                    />
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Leyenda personalizable */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+          <div className="flex items-start gap-3 mb-3">
+            <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
+              <input
+                type="checkbox"
+                checked={deliveryNotice.enabled}
+                onChange={(e) => setDeliveryNotice(prev => ({ ...prev, enabled: e.target.checked }))}
+                className="sr-only peer"
+              />
+              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
+            </label>
+            <div className="flex-1">
+              <h4 className="font-medium text-sm text-blue-800 mb-1">Leyenda informativa</h4>
+              <p className="text-xs text-blue-600 mb-3">
+                Mensaje que se mostrará en el checkout para informar sobre días sin delivery
+              </p>
+            </div>
+          </div>
+
+          {deliveryNotice.enabled && (
+            <div className="space-y-2">
+              <input
+                type="text"
+                value={deliveryNotice.message}
+                onChange={(e) => setDeliveryNotice(prev => ({ ...prev, message: e.target.value }))}
+                placeholder="Ej: Los miércoles no hay delivery"
+                className="w-full px-3 py-2 bg-white border border-blue-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
+              />
+              <p className="text-xs text-blue-600">
+                💡 Este mensaje se mostrará en el checkout cuando el cliente intente seleccionar delivery
+              </p>
+            </div>
+          )}
+        </div>
+
+        <button
+          onClick={handleSaveBlockedDays}
+          disabled={saving === 'blocked_days'}
+          className="w-full py-2 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 disabled:opacity-50 flex items-center justify-center gap-2"
+        >
+          <span className="material-icons text-sm">save</span>
+          {saving === 'blocked_days' ? 'Guardando...' : 'Guardar Configuración de Delivery'}
+        </button>
       </div>
 
       {/* Google Reviews */}

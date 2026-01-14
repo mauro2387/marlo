@@ -36,6 +36,8 @@ function ProductosContent() {
   const [filter, setFilter] = useState<string>('all');
   const [editingStock, setEditingStock] = useState<string | null>(null);
   const [newStock, setNewStock] = useState<number>(0);
+  const [editingRestrictions, setEditingRestrictions] = useState<string | null>(null);
+  const [restrictionsForm, setRestrictionsForm] = useState({ solo_retiro_local: false, no_disponible_box: false });
 
   useEffect(() => {
     fetchProducts();
@@ -85,6 +87,26 @@ function ProductosContent() {
     } catch (err) {
       console.error('Error actualizando stock:', err);
       alert('Error al actualizar el stock');
+    }
+  };
+
+  const updateRestrictions = async (id: string) => {
+    try {
+      await productsDB.update(id, { 
+        solo_retiro_local: restrictionsForm.solo_retiro_local,
+        no_disponible_box: restrictionsForm.no_disponible_box
+      });
+      setProducts(products.map(p => 
+        p.id === id ? { 
+          ...p, 
+          solo_retiro_local: restrictionsForm.solo_retiro_local,
+          no_disponible_box: restrictionsForm.no_disponible_box
+        } : p
+      ));
+      setEditingRestrictions(null);
+    } catch (err) {
+      console.error('Error actualizando restricciones:', err);
+      alert('Error al actualizar las restricciones');
     }
   };
 
@@ -316,21 +338,68 @@ function ProductosContent() {
                     )}
                   </td>
                   <td className="py-3 px-4">
-                    <div className="flex flex-col gap-1">
-                      {product.solo_retiro_local && (
-                        <span className="text-xs bg-orange-100 text-orange-800 px-2 py-0.5 rounded whitespace-nowrap">
-                          🏪 Solo retiro
-                        </span>
-                      )}
-                      {product.no_disponible_box && (
-                        <span className="text-xs bg-purple-100 text-purple-800 px-2 py-0.5 rounded whitespace-nowrap">
-                          📦 No en box
-                        </span>
-                      )}
-                      {!product.solo_retiro_local && !product.no_disponible_box && (
-                        <span className="text-xs text-gray-400">Sin restricciones</span>
-                      )}
-                    </div>
+                    {editingRestrictions === product.id ? (
+                      <div className="space-y-2">
+                        <label className="flex items-center gap-2 cursor-pointer text-xs">
+                          <input
+                            type="checkbox"
+                            checked={restrictionsForm.solo_retiro_local}
+                            onChange={(e) => setRestrictionsForm(prev => ({ ...prev, solo_retiro_local: e.target.checked }))}
+                            className="w-4 h-4 rounded text-orange-500"
+                          />
+                          <span>🏪 Solo retiro</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer text-xs">
+                          <input
+                            type="checkbox"
+                            checked={restrictionsForm.no_disponible_box}
+                            onChange={(e) => setRestrictionsForm(prev => ({ ...prev, no_disponible_box: e.target.checked }))}
+                            className="w-4 h-4 rounded text-purple-500"
+                          />
+                          <span>📦 No en box</span>
+                        </label>
+                        <div className="flex gap-1">
+                          <button
+                            onClick={() => updateRestrictions(product.id)}
+                            className="px-2 py-1 text-xs bg-green-500 text-white rounded hover:bg-green-600"
+                          >
+                            ✓
+                          </button>
+                          <button
+                            onClick={() => setEditingRestrictions(null)}
+                            className="px-2 py-1 text-xs bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          setEditingRestrictions(product.id);
+                          setRestrictionsForm({
+                            solo_retiro_local: product.solo_retiro_local,
+                            no_disponible_box: product.no_disponible_box
+                          });
+                        }}
+                        className="flex flex-col gap-1 hover:opacity-70 transition-opacity"
+                      >
+                        {product.solo_retiro_local && (
+                          <span className="text-xs bg-orange-100 text-orange-800 px-2 py-0.5 rounded whitespace-nowrap">
+                            🏪 Solo retiro
+                          </span>
+                        )}
+                        {product.no_disponible_box && (
+                          <span className="text-xs bg-purple-100 text-purple-800 px-2 py-0.5 rounded whitespace-nowrap">
+                            📦 No en box
+                          </span>
+                        )}
+                        {!product.solo_retiro_local && !product.no_disponible_box && (
+                          <span className="text-xs text-gray-400">Sin restricciones</span>
+                        )}
+                        <span className="text-xs text-blue-500 mt-1">✏️ Editar</span>
+                      </button>
+                    )}
                   </td>
                   <td className="py-3 px-4">
                     <button

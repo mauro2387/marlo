@@ -122,6 +122,11 @@ function CheckoutContent() {
   const [businessHours, setBusinessHours] = useState<BusinessHour[]>(BUSINESS_HOURS);
   const [storeStatus, setStoreStatus] = useState<{ open: boolean; message: string }>({ open: true, message: '' });
   
+  // Días bloqueados para delivery
+  const [blockedDeliveryDays, setBlockedDeliveryDays] = useState<number[]>([]);
+  const [deliveryNotice, setDeliveryNotice] = useState<{ enabled: boolean; message: string }>({ enabled: false, message: '' });
+  const [deliveryBlockedToday, setDeliveryBlockedToday] = useState(false);
+  
   // Form
   const [formData, setFormData] = useState<FormData>({
     nombre: '',
@@ -189,6 +194,29 @@ function CheckoutContent() {
         setStoreStatus(isOpenNow(settings.business_hours));
       } else {
         setStoreStatus(isOpenNow(BUSINESS_HOURS));
+      }
+      
+      // Cargar días bloqueados para delivery
+      if (settings?.blocked_delivery_days) {
+        const blockedDays = settings.blocked_delivery_days
+          .filter((day: any) => day.blocked)
+          .map((day: any) => day.day_index);
+        setBlockedDeliveryDays(blockedDays);
+        
+        // Verificar si hoy es un día bloqueado
+        const today = new Date().getDay();
+        const isTodayBlocked = blockedDays.includes(today);
+        setDeliveryBlockedToday(isTodayBlocked);
+        
+        // Si hoy está bloqueado y hay productos que requieren delivery, forzar retiro
+        if (isTodayBlocked && tipoEntrega === 'delivery') {
+          setTipoEntrega('retiro');
+        }
+      }
+      
+      // Cargar leyenda de delivery
+      if (settings?.delivery_notice) {
+        setDeliveryNotice(settings.delivery_notice);
       }
       
       setLoading(false);
@@ -740,14 +768,31 @@ function CheckoutContent() {
                     </div>
                   </div>
                 )}
+
+                {/* Advertencia de día sin delivery */}
+                {deliveryBlockedToday && !hayProductosSoloRetiro && deliveryNotice.enabled && (
+                  <div className="mb-4 p-4 bg-blue-50 border-2 border-blue-300 rounded-lg">
+                    <div className="flex items-start gap-3">
+                      <span className="text-2xl">📅</span>
+                      <div className="flex-1">
+                        <p className="font-semibold text-blue-900 mb-1">
+                          {deliveryNotice.message}
+                        </p>
+                        <p className="text-sm text-blue-800">
+                          Puedes seleccionar retiro en local sin costo adicional
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
                 
                 <div className="grid grid-cols-2 gap-4 mb-4">
                   <button
                     type="button"
-                    onClick={() => !hayProductosSoloRetiro && setTipoEntrega('delivery')}
-                    disabled={hayProductosSoloRetiro}
+                    onClick={() => !(hayProductosSoloRetiro || deliveryBlockedToday) && setTipoEntrega('delivery')}
+                    disabled={hayProductosSoloRetiro || deliveryBlockedToday}
                     className={`p-4 rounded-lg border-2 transition-all ${
-                      hayProductosSoloRetiro 
+                      (hayProductosSoloRetiro || deliveryBlockedToday)
                         ? 'border-gray-200 bg-gray-100 opacity-50 cursor-not-allowed'
                         : tipoEntrega === 'delivery'
                           ? 'border-pink-500 bg-pink-50'
@@ -757,7 +802,7 @@ function CheckoutContent() {
                     <div className="text-2xl mb-2">🚗</div>
                     <div className="font-semibold">Delivery</div>
                     <div className="text-sm text-gray-500">
-                      {hayProductosSoloRetiro ? 'No disponible' : 'Te lo llevamos'}
+                      {(hayProductosSoloRetiro || deliveryBlockedToday) ? 'No disponible hoy' : 'Te lo llevamos'}
                     </div>
                   </button>
                   
