@@ -154,6 +154,12 @@ export default function ConfiguracionPage() {
     message: 'Delivery disponible hasta las 21:00hs'
   });
 
+  // Modo mantenimiento (pausar pedidos online)
+  const [maintenanceMode, setMaintenanceMode] = useState({
+    enabled: false,
+    message: '⚠️ Temporalmente no estamos tomando pedidos por la app debido al alto volumen de pedidos. Puedes visitarnos en el local para comprar directamente.'
+  });
+
   useEffect(() => {
     fetchData();
   }, []);
@@ -248,6 +254,11 @@ export default function ConfiguracionPage() {
         // Cargar hora límite de delivery
         if (settingsRes.data.delivery_time_limit) {
           setDeliveryTimeLimit(settingsRes.data.delivery_time_limit);
+        }
+
+        // Cargar modo mantenimiento
+        if (settingsRes.data.maintenance_mode) {
+          setMaintenanceMode(settingsRes.data.maintenance_mode);
         }
         
         // Productos seleccionados para el banner
@@ -533,6 +544,23 @@ export default function ConfiguracionPage() {
       });
       if (error) throw error;
       setMessage({ type: 'success', text: 'Configuración de delivery guardada correctamente' });
+    } catch (err: any) {
+      setMessage({ type: 'error', text: err?.message || 'Error al guardar' });
+    } finally {
+      setSaving(null);
+      setTimeout(() => setMessage(null), 3000);
+    }
+  };
+
+  // Guardar modo mantenimiento
+  const handleSaveMaintenanceMode = async () => {
+    setSaving('maintenance');
+    try {
+      const { error } = await siteSettingsDB.update({
+        maintenance_mode: maintenanceMode
+      });
+      if (error) throw error;
+      setMessage({ type: 'success', text: 'Modo mantenimiento actualizado' });
     } catch (err: any) {
       setMessage({ type: 'error', text: err?.message || 'Error al guardar' });
     } finally {
@@ -1234,6 +1262,71 @@ export default function ConfiguracionPage() {
             </div>
           </div>
         )}
+      </div>
+
+      {/* Modo Mantenimiento - Pausar Pedidos Online */}
+      <div className="bg-white rounded-xl shadow-md p-6 border-2 border-red-200">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+            🚫 Pausar Pedidos Online
+          </h3>
+          <label className="relative inline-flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              checked={maintenanceMode.enabled}
+              onChange={(e) => setMaintenanceMode(prev => ({ ...prev, enabled: e.target.checked }))}
+              className="sr-only peer"
+            />
+            <div className="w-14 h-7 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-red-500"></div>
+          </label>
+        </div>
+        
+        <div className={`p-4 rounded-lg mb-4 ${
+          maintenanceMode.enabled 
+            ? 'bg-red-50 border-2 border-red-300' 
+            : 'bg-gray-50 border border-gray-200'
+        }`}>
+          <p className={`text-sm font-medium mb-2 ${
+            maintenanceMode.enabled ? 'text-red-900' : 'text-gray-700'
+          }`}>
+            {maintenanceMode.enabled 
+              ? '🔴 PEDIDOS ONLINE PAUSADOS - Los clientes verán:' 
+              : '✅ Pedidos online activos normalmente'
+            }
+          </p>
+          {maintenanceMode.enabled && (
+            <div className="bg-white p-3 rounded border border-red-200">
+              <p className="text-sm text-gray-800">{maintenanceMode.message}</p>
+            </div>
+          )}
+        </div>
+
+        <div className="space-y-3">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Mensaje para clientes
+            </label>
+            <textarea
+              value={maintenanceMode.message}
+              onChange={(e) => setMaintenanceMode(prev => ({ ...prev, message: e.target.value }))}
+              rows={3}
+              placeholder="Mensaje que verán los clientes cuando intenten hacer un pedido"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              💡 Ejemplo: "Temporalmente no estamos tomando pedidos por la app. Puedes visitarnos en el local."
+            </p>
+          </div>
+        </div>
+
+        <button
+          onClick={handleSaveMaintenanceMode}
+          disabled={saving === 'maintenance'}
+          className="w-full mt-4 py-2 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 disabled:opacity-50 flex items-center justify-center gap-2"
+        >
+          <span className="material-icons text-sm">save</span>
+          {saving === 'maintenance' ? 'Guardando...' : 'Guardar Configuración'}
+        </button>
       </div>
 
       {/* Días Sin Delivery */}

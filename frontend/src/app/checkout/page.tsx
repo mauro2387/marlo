@@ -131,6 +131,9 @@ function CheckoutContent() {
   const [deliveryTimeLimit, setDeliveryTimeLimit] = useState<{ enabled: boolean; time: string; message: string }>({ enabled: false, time: '21:00', message: '' });
   const [deliveryBlockedByTime, setDeliveryBlockedByTime] = useState(false);
   
+  // Modo mantenimiento
+  const [maintenanceMode, setMaintenanceMode] = useState<{ enabled: boolean; message: string }>({ enabled: false, message: '' });
+  
   // Form
   const [formData, setFormData] = useState<FormData>({
     nombre: '',
@@ -241,6 +244,11 @@ function CheckoutContent() {
             setTipoEntrega('retiro');
           }
         }
+      }
+
+      // Cargar modo mantenimiento
+      if (settings?.maintenance_mode) {
+        setMaintenanceMode(settings.maintenance_mode);
       }
       
       setLoading(false);
@@ -644,6 +652,54 @@ function CheckoutContent() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <LoadingSpinner size="lg" />
+      </div>
+    );
+  }
+
+  // Mostrar pantalla de mantenimiento si está activado
+  if (maintenanceMode.enabled) {
+    return (
+      <div className="min-h-screen bg-cream-50 py-8">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-2xl">
+          <div className="bg-white rounded-xl shadow-lg p-8 border-4 border-red-400">
+            <div className="text-center mb-6">
+              <span className="text-6xl block mb-4">🚫</span>
+              <h1 className="text-2xl font-bold text-red-800 mb-2">
+                Pedidos Online Temporalmente Pausados
+              </h1>
+            </div>
+            
+            <div className="bg-red-50 border-2 border-red-300 rounded-lg p-6 mb-6">
+              <p className="text-gray-800 text-center whitespace-pre-line">
+                {maintenanceMode.message}
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <button
+                onClick={() => router.push('/')}
+                className="w-full py-3 bg-pink-500 text-white rounded-lg font-semibold hover:bg-pink-600 transition-colors"
+              >
+                🏠 Volver al Inicio
+              </button>
+              
+              <a
+                href="https://wa.me/59897865053"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block w-full py-3 bg-green-500 text-white rounded-lg font-semibold hover:bg-green-600 transition-colors text-center"
+              >
+                💬 Contactar por WhatsApp
+              </a>
+            </div>
+
+            <div className="mt-6 pt-6 border-t border-gray-200 text-center">
+              <p className="text-sm text-gray-600">
+                📍 Puedes visitarnos en nuestro local durante el horario de atención
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }

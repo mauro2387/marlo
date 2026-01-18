@@ -1027,6 +1027,7 @@ export const siteSettingsDB = {
     blocked_delivery_days?: any;
     delivery_notice?: any;
     delivery_time_limit?: any;
+    maintenance_mode?: any;
   }) => {
     return supabaseFetch<any>('site_settings?id=eq.main', { 
       method: 'PATCH', 
