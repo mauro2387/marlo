@@ -604,7 +604,7 @@ export const authDB = {
   },
 
   // Registro de usuario
-  signup: async (data: { email: string; password: string; nombre: string; apellido?: string; telefono?: string; fecha_cumpleanos?: string }) => {
+  signup: async (data: { email: string; password: string; nombre: string; apellido?: string; telefono?: string; country?: string; fecha_cumpleanos?: string }) => {
     try {
       const response = await fetch(`${AUTH_URL}/signup`, {
         method: 'POST',
@@ -619,6 +619,7 @@ export const authDB = {
             nombre: data.nombre,
             apellido: data.apellido || '',
             telefono: data.telefono || '',
+            country: data.country || 'UY',
             fecha_cumpleanos: data.fecha_cumpleanos || null,
           },
         }),

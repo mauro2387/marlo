@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import { authDB } from '@/lib/supabase-fetch';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import { SPANISH_SPEAKING_COUNTRIES, validatePhone, formatPhoneNumber } from '@/lib/countries';
 
 export default function RegistroPage() {
   const router = useRouter();
@@ -14,6 +15,7 @@ export default function RegistroPage() {
     apellido: '',
     email: '',
     telefono: '',
+    country: 'UY',
     fecha_cumpleanos: '',
     password: '',
     confirmPassword: '',
@@ -58,15 +60,29 @@ export default function RegistroPage() {
       }
     }
 
+    // Validar teléfono si se proporciona
+    if (formData.telefono && !validatePhone(formData.telefono, formData.country)) {
+      const country = SPANISH_SPEAKING_COUNTRIES.find(c => c.code === formData.country);
+      setError(`Teléfono inválido para ${country?.name}. Ingresa ${country?.phoneLength} dígitos aproximadamente.`);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
 
     try {
+      // Formatear teléfono con código de país
+      const telefonoFormateado = formData.telefono 
+        ? formatPhoneNumber(formData.telefono, formData.country)
+        : undefined;
+
       const { data, error: signupError } = await authDB.signup({
         email: formData.email,
         password: formData.password,
         nombre: formData.nombre,
         apellido: formData.apellido,
-        telefono: formData.telefono || undefined,
+        telefono: telefonoFormateado,
+        country: formData.country,
         fecha_cumpleanos: formData.fecha_cumpleanos || undefined,
       });
 

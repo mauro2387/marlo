@@ -45,6 +45,7 @@ interface FormData {
   nombre: string;
   email: string;
   telefono: string;
+  country: string;
   departamento: string;
   zona: string;
   direccion: string;
@@ -139,6 +140,7 @@ function CheckoutContent() {
     nombre: '',
     email: '',
     telefono: '',
+    country: 'UY',
     departamento: 'Maldonado',
     zona: '',
     direccion: '',
@@ -177,7 +179,8 @@ function CheckoutContent() {
           ...prev,
           nombre: user.nombre || '',
           email: user.email || '',
-          telefono: user.telefono || ''
+          telefono: user.telefono || '',
+          country: user.country || 'UY'
         }));
         
         // Verificar pedidos pendientes del usuario
@@ -328,8 +331,9 @@ function CheckoutContent() {
     
     if (!formData.telefono.trim()) {
       newErrors.telefono = 'El teléfono es requerido';
-    } else if (!/^(\+598|0)?9\d{7}$/.test(formData.telefono.replace(/\s/g, ''))) {
-      newErrors.telefono = 'Formato: 09X XXX XXX o +598 9X XXX XXX';
+    } else if (!validatePhone(formData.telefono, formData.country)) {
+      const country = SPANISH_SPEAKING_COUNTRIES.find(c => c.code === formData.country);
+      newErrors.telefono = `Teléfono inválido para ${country?.name}`;
     }
     
     if (tipoEntrega === 'delivery') {
@@ -483,13 +487,8 @@ function CheckoutContent() {
         }
       }
       
-      // Formatear teléfono para Uruguay
-      let telefonoFormateado = formData.telefono.replace(/\s/g, '');
-      if (telefonoFormateado.startsWith('0')) {
-        telefonoFormateado = '+598' + telefonoFormateado.substring(1);
-      } else if (!telefonoFormateado.startsWith('+598')) {
-        telefonoFormateado = '+598' + telefonoFormateado;
-      }
+      // Formatear teléfono con código de país
+      const telefonoFormateado = formatPhoneNumber(formData.telefono, formData.country);
       
       // Crear pedido usando ordersAPI (maneja esquema correcto)
       const orderData = {
