@@ -10,6 +10,7 @@ interface User {
   rol?: string;
   avatar?: string;
   telefono?: string;
+  country?: string;
   direccion?: string;
   zona?: string;
   departamento?: string;

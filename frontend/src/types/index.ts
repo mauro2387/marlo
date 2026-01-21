@@ -7,6 +7,7 @@ export interface User {
   apellido: string;
   email: string;
   telefono?: string;
+  country?: string;
   fecha_cumpleanos?: string;
   puntos: number;
   avatar?: string;
