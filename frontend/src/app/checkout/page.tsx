@@ -11,6 +11,7 @@ import { couponsDB, usersDB, authDB, productsDB, ordersDB, deliveryZonesGeoDB, s
 import { generateOrderCode } from '@/utils/validators';
 import { createPaymentPreference, buildPreferenceFromOrder } from '@/services/mercadopago';
 import { isOpenNow, BUSINESS_HOURS, type BusinessHour } from '@/config/constants';
+import { SPANISH_SPEAKING_COUNTRIES, validatePhone, formatPhoneNumber } from '@/lib/countries';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import Navbar from '@/components/Navbar';
 
