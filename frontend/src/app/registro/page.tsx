@@ -206,30 +206,25 @@ export default function RegistroPage() {
                 </div>
 
                 <div>
-                  <label htmlFor="country" className="block text-sm font-semibold text-gray-700 mb-2">
-                    País *
-                  </label>
-                  <select
-                    id="country"
-                    name="country"
-                    value={formData.country}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
-                  >
-                    {SPANISH_SPEAKING_COUNTRIES.map((country) => (
-                      <option key={country.code} value={country.code}>
-                        {country.flag} {country.name} ({country.dialCode})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
                   <label htmlFor="telefono" className="block text-sm font-semibold text-gray-700 mb-2">
                     Teléfono
                   </label>
                   <div className="flex gap-2">
-                    <div className="w-28 px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-600 flex items-center justify-center font-semibold">
+                    <select
+                      id="country"
+                      name="country"
+                      value={formData.country}
+                      onChange={handleChange}
+                      className="w-20 px-2 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors text-center text-lg"
+                      title={SPANISH_SPEAKING_COUNTRIES.find(c => c.code === formData.country)?.name}
+                    >
+                      {SPANISH_SPEAKING_COUNTRIES.map((country) => (
+                        <option key={country.code} value={country.code}>
+                          {country.flag}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="w-16 px-2 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-700 flex items-center justify-center font-medium text-sm">
                       {SPANISH_SPEAKING_COUNTRIES.find(c => c.code === formData.country)?.dialCode}
                     </div>
                     <input

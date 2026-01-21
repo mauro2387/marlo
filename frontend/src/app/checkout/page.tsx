@@ -797,30 +797,25 @@ function CheckoutContent() {
                     )}
                   </div>
                   
-                  <div>
-                    <label className="block text-sm font-medium text-brown-700 mb-1">
-                      País *
-                    </label>
-                    <select
-                      name="country"
-                      value={formData.country}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-300 focus:border-pink-400"
-                    >
-                      {SPANISH_SPEAKING_COUNTRIES.map((country) => (
-                        <option key={country.code} value={country.code}>
-                          {country.flag} {country.name} ({country.dialCode})
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
+                  <div className="md:col-span-2">
                     <label className="block text-sm font-medium text-brown-700 mb-1">
                       Teléfono (WhatsApp) *
                     </label>
                     <div className="flex gap-2">
-                      <div className="w-24 px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-600 flex items-center justify-center font-semibold text-sm">
+                      <select
+                        name="country"
+                        value={formData.country}
+                        onChange={handleInputChange}
+                        className="w-16 px-1 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-300 focus:border-pink-400 text-center text-lg"
+                        title={SPANISH_SPEAKING_COUNTRIES.find(c => c.code === formData.country)?.name}
+                      >
+                        {SPANISH_SPEAKING_COUNTRIES.map((country) => (
+                          <option key={country.code} value={country.code}>
+                            {country.flag}
+                          </option>
+                        ))}
+                      </select>
+                      <div className="w-14 px-1 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-700 flex items-center justify-center font-medium text-xs">
                         {SPANISH_SPEAKING_COUNTRIES.find(c => c.code === formData.country)?.dialCode}
                       </div>
                       <input

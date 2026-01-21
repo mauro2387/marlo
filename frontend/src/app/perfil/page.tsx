@@ -385,33 +385,28 @@ export default function PerfilPage() {
 
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        País
-                      </label>
-                      <select
-                        value={userData.country}
-                        onChange={(e) => setUserData({...userData, country: e.target.value})}
-                        disabled={!editando}
-                        className={`w-full px-4 py-3 border rounded-lg transition-colors ${
-                          editando 
-                            ? 'border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/20' 
-                            : 'border-gray-200 bg-gray-50 text-gray-600'
-                        }`}
-                      >
-                        {SPANISH_SPEAKING_COUNTRIES.map((country) => (
-                          <option key={country.code} value={country.code}>
-                            {country.flag} {country.name} ({country.dialCode})
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
                         Teléfono
                       </label>
                       <div className="flex gap-2">
-                        <div className={`w-28 px-4 py-3 border rounded-lg flex items-center justify-center font-semibold ${
-                          editando ? 'border-gray-300 bg-gray-50 text-gray-600' : 'border-gray-200 bg-gray-100 text-gray-500'
+                        <select
+                          value={userData.country}
+                          onChange={(e) => setUserData({...userData, country: e.target.value})}
+                          disabled={!editando}
+                          className={`w-20 px-2 py-3 border rounded-lg transition-colors text-center text-lg ${
+                            editando 
+                              ? 'border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/20' 
+                              : 'border-gray-200 bg-gray-50 text-gray-600'
+                          }`}
+                          title={SPANISH_SPEAKING_COUNTRIES.find(c => c.code === userData.country)?.name}
+                        >
+                          {SPANISH_SPEAKING_COUNTRIES.map((country) => (
+                            <option key={country.code} value={country.code}>
+                              {country.flag}
+                            </option>
+                          ))}
+                        </select>
+                        <div className={`w-16 px-2 py-3 border rounded-lg flex items-center justify-center font-medium text-sm ${
+                          editando ? 'border-gray-300 bg-gray-50 text-gray-700' : 'border-gray-200 bg-gray-100 text-gray-500'
                         }`}>
                           {SPANISH_SPEAKING_COUNTRIES.find(c => c.code === userData.country)?.dialCode}
                         </div>
