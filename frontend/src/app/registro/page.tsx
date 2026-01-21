@@ -106,8 +106,9 @@ export default function RegistroPage() {
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type, checked } = e.target;
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value, type } = e.target;
+    const checked = (e.target as HTMLInputElement).checked;
     setFormData(prev => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value
@@ -205,18 +206,42 @@ export default function RegistroPage() {
                 </div>
 
                 <div>
+                  <label htmlFor="country" className="block text-sm font-semibold text-gray-700 mb-2">
+                    País *
+                  </label>
+                  <select
+                    id="country"
+                    name="country"
+                    value={formData.country}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+                  >
+                    {SPANISH_SPEAKING_COUNTRIES.map((country) => (
+                      <option key={country.code} value={country.code}>
+                        {country.flag} {country.name} ({country.dialCode})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
                   <label htmlFor="telefono" className="block text-sm font-semibold text-gray-700 mb-2">
                     Teléfono
                   </label>
-                  <input
-                    type="tel"
-                    id="telefono"
-                    name="telefono"
-                    value={formData.telefono}
-                    onChange={handleChange}
-                    placeholder="09X XXX XXX"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
-                  />
+                  <div className="flex gap-2">
+                    <div className="w-28 px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-600 flex items-center justify-center font-semibold">
+                      {SPANISH_SPEAKING_COUNTRIES.find(c => c.code === formData.country)?.dialCode}
+                    </div>
+                    <input
+                      type="tel"
+                      id="telefono"
+                      name="telefono"
+                      value={formData.telefono}
+                      onChange={handleChange}
+                      placeholder="XXX XXX XXX"
+                      className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+                    />
+                  </div>
                   <p className="text-xs text-gray-500 mt-1">Para notificaciones de pedidos por WhatsApp</p>
                 </div>
 

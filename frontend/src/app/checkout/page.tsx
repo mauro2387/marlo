@@ -797,20 +797,43 @@ function CheckoutContent() {
                     )}
                   </div>
                   
-                  <div className="md:col-span-2">
+                  <div>
+                    <label className="block text-sm font-medium text-brown-700 mb-1">
+                      País *
+                    </label>
+                    <select
+                      name="country"
+                      value={formData.country}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-300 focus:border-pink-400"
+                    >
+                      {SPANISH_SPEAKING_COUNTRIES.map((country) => (
+                        <option key={country.code} value={country.code}>
+                          {country.flag} {country.name} ({country.dialCode})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
                     <label className="block text-sm font-medium text-brown-700 mb-1">
                       Teléfono (WhatsApp) *
                     </label>
-                    <input
-                      type="tel"
-                      name="telefono"
-                      value={formData.telefono}
-                      onChange={handleInputChange}
-                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-pink-300 focus:border-pink-400 ${
-                        errors.telefono ? 'border-red-500' : 'border-gray-300'
-                      }`}
-                      placeholder="09X XXX XXX"
-                    />
+                    <div className="flex gap-2">
+                      <div className="w-24 px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-600 flex items-center justify-center font-semibold text-sm">
+                        {SPANISH_SPEAKING_COUNTRIES.find(c => c.code === formData.country)?.dialCode}
+                      </div>
+                      <input
+                        type="tel"
+                        name="telefono"
+                        value={formData.telefono}
+                        onChange={handleInputChange}
+                        className={`flex-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-pink-300 focus:border-pink-400 ${
+                          errors.telefono ? 'border-red-500' : 'border-gray-300'
+                        }`}
+                        placeholder="XXX XXX XXX"
+                      />
+                    </div>
                     {errors.telefono && (
                       <p className="text-red-500 text-sm mt-1">{errors.telefono}</p>
                     )}

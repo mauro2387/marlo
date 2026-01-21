@@ -5,11 +5,13 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { jobsService } from '@/services/supabase-api';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import { SPANISH_SPEAKING_COUNTRIES, validatePhone, formatPhoneNumber } from '@/lib/countries';
 
 interface FormData {
   nombre: string;
   email: string;
   telefono: string;
+  country: string;
   edad: string;
   experiencia: string;
   disponibilidad: string;
@@ -47,6 +49,7 @@ export default function TrabajaNosotrosPage() {
     nombre: '',
     email: '',
     telefono: '',
+    country: 'UY',
     edad: '',
     experiencia: '',
     disponibilidad: '',
@@ -258,17 +261,41 @@ export default function TrabajaNosotrosPage() {
                     
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Teléfono (WhatsApp) *
+                        País *
                       </label>
-                      <input
-                        type="tel"
-                        name="telefono"
-                        value={formData.telefono}
+                      <select
+                        name="country"
+                        value={formData.country}
                         onChange={handleInputChange}
                         required
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-300 focus:border-pink-400"
-                        placeholder="09X XXX XXX"
-                      />
+                      >
+                        {SPANISH_SPEAKING_COUNTRIES.map((country) => (
+                          <option key={country.code} value={country.code}>
+                            {country.flag} {country.name} ({country.dialCode})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Teléfono (WhatsApp) *
+                      </label>
+                      <div className="flex gap-2">
+                        <div className="w-24 px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-600 flex items-center justify-center font-semibold text-sm">
+                          {SPANISH_SPEAKING_COUNTRIES.find(c => c.code === formData.country)?.dialCode}
+                        </div>
+                        <input
+                          type="tel"
+                          name="telefono"
+                          value={formData.telefono}
+                          onChange={handleInputChange}
+                          required
+                          placeholder="XXX XXX XXX"
+                          className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-300 focus:border-pink-400"
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>

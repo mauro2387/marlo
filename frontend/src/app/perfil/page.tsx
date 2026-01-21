@@ -12,6 +12,7 @@ import { supabase } from '@/lib/supabase/client';
 import { ordersDB } from '@/lib/supabase-fetch';
 import { notificationService } from '@/lib/notifications';
 import ScrollAnimation from '@/components/ScrollAnimation';
+import { SPANISH_SPEAKING_COUNTRIES, validatePhone, formatPhoneNumber } from '@/lib/countries';
 
 export default function PerfilPage() {
   const router = useRouter();
@@ -24,6 +25,7 @@ export default function PerfilPage() {
     apellido: '',
     email: '',
     telefono: '',
+    country: 'UY',
     direccion: '',
     comuna: '',
     region: '',
@@ -47,6 +49,7 @@ export default function PerfilPage() {
         apellido: user.apellido || '',
         email: user.email || '',
         telefono: user.telefono || '',
+        country: user.country || 'UY',
         direccion: user.direccion || '',
         comuna: (user as any).comuna || '',
         region: (user as any).region || '',
@@ -382,19 +385,48 @@ export default function PerfilPage() {
 
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Teléfono
+                        País
                       </label>
-                      <input
-                        type="tel"
-                        value={userData.telefono}
-                        onChange={(e) => setUserData({...userData, telefono: e.target.value})}
+                      <select
+                        value={userData.country}
+                        onChange={(e) => setUserData({...userData, country: e.target.value})}
                         disabled={!editando}
                         className={`w-full px-4 py-3 border rounded-lg transition-colors ${
                           editando 
                             ? 'border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/20' 
                             : 'border-gray-200 bg-gray-50 text-gray-600'
                         }`}
-                      />
+                      >
+                        {SPANISH_SPEAKING_COUNTRIES.map((country) => (
+                          <option key={country.code} value={country.code}>
+                            {country.flag} {country.name} ({country.dialCode})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Teléfono
+                      </label>
+                      <div className="flex gap-2">
+                        <div className={`w-28 px-4 py-3 border rounded-lg flex items-center justify-center font-semibold ${
+                          editando ? 'border-gray-300 bg-gray-50 text-gray-600' : 'border-gray-200 bg-gray-100 text-gray-500'
+                        }`}>
+                          {SPANISH_SPEAKING_COUNTRIES.find(c => c.code === userData.country)?.dialCode}
+                        </div>
+                        <input
+                          type="tel"
+                          value={userData.telefono}
+                          onChange={(e) => setUserData({...userData, telefono: e.target.value})}
+                          disabled={!editando}
+                          className={`flex-1 px-4 py-3 border rounded-lg transition-colors ${
+                            editando 
+                              ? 'border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/20' 
+                              : 'border-gray-200 bg-gray-50 text-gray-600'
+                          }`}
+                        />
+                      </div>
                     </div>
                   </div>
                   </div>

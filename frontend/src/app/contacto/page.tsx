@@ -10,6 +10,7 @@ import { wholesaleDB } from '@/lib/supabase-fetch';
 import { useAuthStore } from '@/store/authStore';
 import { notificationService } from '@/lib/notifications';
 import { MetaPixelEvents } from '@/components/MetaPixel';
+import { SPANISH_SPEAKING_COUNTRIES, validatePhone, formatPhoneNumber } from '@/lib/countries';
 
 export default function ContactoPage() {
   const [activeTab, setActiveTab] = useState<'contacto' | 'mayorista'>('contacto');
@@ -19,6 +20,7 @@ export default function ContactoPage() {
     nombre: '',
     email: '',
     telefono: '',
+    country: 'UY',
     asunto: 'consulta',
     mensaje: '',
   });
@@ -27,6 +29,7 @@ export default function ContactoPage() {
     nombre: '',
     email: '',
     telefono: '',
+    country: 'UY',
     empresa: '',
     tipo_negocio: '',
     cantidad_estimada: '',
@@ -64,6 +67,7 @@ export default function ContactoPage() {
         nombre: '',
         email: '',
         telefono: '',
+        country: 'UY',
         asunto: 'consulta',
         mensaje: '',
       });
@@ -105,6 +109,7 @@ export default function ContactoPage() {
         nombre: '',
         email: '',
         telefono: '',
+        country: 'UY',
         empresa: '',
         tipo_negocio: '',
         cantidad_estimada: '',
@@ -243,18 +248,42 @@ export default function ContactoPage() {
 
                   <div className="grid md:grid-cols-2 gap-4">
                     <div>
+                      <label htmlFor="country" className="block text-sm font-semibold text-gray-700 mb-2">
+                        País
+                      </label>
+                      <select
+                        id="country"
+                        name="country"
+                        value={formData.country}
+                        onChange={handleChange}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-300 focus:border-pink-400 transition-colors"
+                      >
+                        {SPANISH_SPEAKING_COUNTRIES.map((country) => (
+                          <option key={country.code} value={country.code}>
+                            {country.flag} {country.name} ({country.dialCode})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
                       <label htmlFor="telefono" className="block text-sm font-semibold text-gray-700 mb-2">
                         Teléfono (WhatsApp)
                       </label>
-                      <input
-                        type="tel"
-                        id="telefono"
-                        name="telefono"
-                        value={formData.telefono}
-                        onChange={handleChange}
-                        placeholder="09X XXX XXX"
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-300 focus:border-pink-400 transition-colors"
-                      />
+                      <div className="flex gap-2">
+                        <div className="w-24 px-3 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-600 flex items-center justify-center font-semibold text-sm">
+                          {SPANISH_SPEAKING_COUNTRIES.find(c => c.code === formData.country)?.dialCode}
+                        </div>
+                        <input
+                          type="tel"
+                          id="telefono"
+                          name="telefono"
+                          value={formData.telefono}
+                          onChange={handleChange}
+                          placeholder="XXX XXX XXX"
+                          className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-300 focus:border-pink-400 transition-colors"
+                        />
+                      </div>
                     </div>
 
                     <div>
@@ -415,16 +444,40 @@ export default function ContactoPage() {
                       </div>
                       <div>
                         <label className="block text-sm font-semibold text-gray-700 mb-2">
-                          Teléfono (WhatsApp) *
+                          País *
                         </label>
+                        <select
+                          name="country"
+                          value={wholesaleData.country}
+                          onChange={handleWholesaleChange}
+                          required
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-300 focus:border-amber-400 transition-colors"
+                        >
+                          {SPANISH_SPEAKING_COUNTRIES.map((country) => (
+                            <option key={country.code} value={country.code}>
+                              {country.flag} {country.name} ({country.dialCode})
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Teléfono (WhatsApp) *
+                      </label>
+                      <div className="flex gap-2">
+                        <div className="w-24 px-3 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-600 flex items-center justify-center font-semibold text-sm">
+                          {SPANISH_SPEAKING_COUNTRIES.find(c => c.code === wholesaleData.country)?.dialCode}
+                        </div>
                         <input
                           type="tel"
                           name="telefono"
                           value={wholesaleData.telefono}
                           onChange={handleWholesaleChange}
                           required
-                          placeholder="09X XXX XXX"
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-300 focus:border-amber-400 transition-colors"
+                          placeholder="XXX XXX XXX"
+                          className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-300 focus:border-amber-400 transition-colors"
                         />
                       </div>
                     </div>
