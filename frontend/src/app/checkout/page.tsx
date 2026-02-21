@@ -917,7 +917,13 @@ function CheckoutContent() {
                     <div className="text-2xl mb-2">🚗</div>
                     <div className="font-semibold">Delivery</div>
                     <div className="text-sm text-gray-500">
-                      {(hayProductosSoloRetiro || deliveryBlockedToday || deliveryBlockedByTime) ? 'No disponible ahora' : 'Te lo llevamos'}
+                      {hayProductosSoloRetiro 
+                        ? '🏪 Solo retiro en local' 
+                        : deliveryBlockedToday 
+                          ? `📅 Hoy no hay delivery` 
+                          : deliveryBlockedByTime 
+                            ? `🕐 Pasó la hora límite (${deliveryTimeLimit.time}hs)` 
+                            : 'Te lo llevamos'}
                     </div>
                   </button>
                   
@@ -1438,16 +1444,16 @@ function CheckoutContent() {
                 
                 {/* Alerta de local cerrado */}
                 {!storeStatus.open && (
-                  <div className="mt-4 bg-red-50 border border-red-200 rounded-xl p-4">
+                  <div className="mt-4 bg-red-50 border-2 border-red-300 rounded-xl p-5">
                     <div className="flex items-start gap-3">
-                      <span className="material-icons text-red-500 text-2xl">schedule</span>
+                      <span className="text-3xl">⏰</span>
                       <div className="flex-1">
-                        <h4 className="font-bold text-red-700 mb-1">¡Estamos cerrados!</h4>
-                        <p className="text-sm text-red-600 mb-3">
+                        <h4 className="font-bold text-red-700 text-lg mb-1">¡Estamos cerrados!</h4>
+                        <p className="text-red-600 font-medium mb-2">
                           {storeStatus.message}
                         </p>
-                        <p className="text-sm text-gray-600 mb-3">
-                          Si querés hacer un pedido especial, contactanos por WhatsApp y te ayudamos.
+                        <p className="text-sm text-gray-700 mb-3">
+                          Podés hacer tu pedido cuando abramos, o contactanos por WhatsApp para pedidos especiales.
                         </p>
                         <a
                           href="https://wa.me/59897865053?text=Hola!%20Quiero%20hacer%20un%20pedido%20especial"
@@ -1477,12 +1483,13 @@ function CheckoutContent() {
                     </>
                   ) : !storeStatus.open ? (
                     <>
-                      <span className="material-icons text-sm">schedule</span>
-                      Local cerrado
+                      <span className="text-sm">⏰</span>
+                      {storeStatus.message}
                     </>
                   ) : fueraDeZona && tipoEntrega === 'delivery' ? (
                     <>
-                      Ubicación fuera de zona
+                      <span className="text-sm">📍</span>
+                      Fuera de zona - Consulta por WhatsApp
                     </>
                   ) : (
                     <>
