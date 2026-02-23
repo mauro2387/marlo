@@ -30,6 +30,10 @@ export default function CarritoPage() {
       
       const unavailable = new Set<string>();
       productIds.forEach(id => {
+        // Ignorar boxes personalizadas (box-xxx), canjes de puntos (canje-xxx) y otros IDs especiales
+        if (id.startsWith('box-') || id.startsWith('canje-') || id.startsWith('reward-')) {
+          return; // No verificar disponibilidad de estos items
+        }
         const product = products?.find(p => p.id === id);
         if (!product || !product.activo) {
           unavailable.add(id);
