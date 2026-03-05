@@ -21,7 +21,7 @@ const faqs: FAQItem[] = [
   {
     category: 'Pedidos',
     question: '¿Cuánto tiempo tarda mi pedido?',
-    answer: 'Los pedidos de delivery en Maldonado se entregan el mismo día o al día siguiente según la zona. Para retiro en local, te avisamos por WhatsApp cuando tu pedido esté listo (generalmente en 1-2 horas).'
+    answer: 'Los pedidos se preparan para retiro en local. Te avisamos por WhatsApp cuando tu pedido esté listo (generalmente en 1-2 horas).'
   },
   {
     category: 'Pedidos',
@@ -33,21 +33,21 @@ const faqs: FAQItem[] = [
     question: '¿Cómo sé el estado de mi pedido?',
     answer: 'Puedes ver el estado de tus pedidos en la sección "Mis Pedidos" de tu perfil. También te notificamos por WhatsApp cada vez que tu pedido cambia de estado.'
   },
-  // Delivery
+  // Retiro
   {
-    category: 'Delivery',
-    question: '¿A qué zonas hacen delivery?',
-    answer: 'Hacemos delivery a todas las zonas de Maldonado incluyendo: Centro, Punta del Este, La Barra, Manantiales, José Ignacio, San Carlos, Piriápolis y más. El costo varía según la zona.'
+    category: 'Retiro',
+    question: '¿Cómo funciona el retiro en local?',
+    answer: 'Hacés tu pedido online, te avisamos por WhatsApp cuando esté listo y lo retirás en nuestro local. El retiro es siempre gratis.'
   },
   {
-    category: 'Delivery',
-    question: '¿Cuánto cuesta el delivery?',
-    answer: 'El costo de delivery depende de la zona. Puedes ver el costo exacto al seleccionar tu zona durante el checkout. El retiro en local es siempre gratis.'
+    category: 'Retiro',
+    question: '¿Hacen delivery?',
+    answer: 'Actualmente no contamos con servicio de delivery propio. Podés hacer tu pedido online y retirarlo en nuestro local sin costo adicional.'
   },
   {
-    category: 'Delivery',
-    question: '¿Hacen envíos a otros departamentos?',
-    answer: 'Actualmente solo hacemos delivery en el departamento de Maldonado. Para otros departamentos, contáctanos por WhatsApp para coordinar opciones de envío especiales.'
+    category: 'Retiro',
+    question: '¿Dónde queda el local?',
+    answer: 'Estamos en Maldonado, Uruguay. Te mostramos la dirección exacta durante el checkout al confirmar tu pedido.'
   },
   // Pagos
   {
@@ -110,7 +110,7 @@ const faqs: FAQItem[] = [
   },
 ];
 
-const categories = ['Todos', 'Pedidos', 'Delivery', 'Pagos', 'Cuenta', 'Puntos', 'Productos'];
+const categories = ['Todos', 'Pedidos', 'Retiro', 'Pagos', 'Cuenta', 'Puntos', 'Productos'];
 
 export default function AyudaPage() {
   const [activeCategory, setActiveCategory] = useState('Todos');

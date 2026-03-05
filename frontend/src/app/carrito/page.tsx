@@ -206,15 +206,15 @@ export default function CarritoPage() {
                       <span className="font-semibold">${subtotal.toLocaleString('es-CL')}</span>
                     </div>
                     <div className="flex justify-between text-gray-500 text-sm">
-                      <span>Envío</span>
-                      <span className="italic">Se calcula en checkout</span>
+                      <span>Retiro en local</span>
+                      <span className="text-green-600">Gratis</span>
                     </div>
                     <div className="border-t pt-4">
                       <div className="flex justify-between text-lg">
                         <span className="font-bold">Subtotal</span>
                         <span className="font-bold text-2xl text-primary">${subtotal.toLocaleString('es-CL')}</span>
                       </div>
-                      <p className="text-xs text-gray-500 mt-1">+ envío según zona</p>
+                      <p className="text-xs text-gray-500 mt-1">Retiro en local sin costo</p>
                     </div>
                   </div>
 
@@ -240,10 +240,6 @@ export default function CarritoPage() {
                   </p>
 
                   <div className="space-y-3 text-sm text-gray-600">
-                    <div className="flex items-center gap-2">
-                      <span className="material-icons text-base">local_shipping</span>
-                      <span>Envío a domicilio disponible</span>
-                    </div>
                     <div className="flex items-center gap-2">
                       <span className="material-icons text-base">store</span>
                       <span>Retiro en local gratis</span>

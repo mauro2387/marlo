@@ -370,7 +370,7 @@ export default function Home() {
               <div className="flex justify-center pt-2">
                 <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/80 backdrop-blur-sm rounded-full shadow-sm">
                   <span className="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse"></span>
-                  <span className="text-sm font-medium text-gray-700">Envíos a todo Maldonado</span>
+                  <span className="text-sm font-medium text-gray-700">Retiro en local disponible</span>
                 </div>
               </div>
 
@@ -540,8 +540,8 @@ export default function Home() {
                   </div>
                   <div className="w-px h-6 bg-gray-200"></div>
                   <div className="flex flex-col items-center">
-                    <span className="material-icons text-primary text-sm">local_shipping</span>
-                    <p className="text-[9px] text-gray-600">Envío 24h</p>
+                    <span className="material-icons text-primary text-sm">store</span>
+                    <p className="text-[9px] text-gray-600">Retiro</p>
                   </div>
                   <div className="w-px h-6 bg-gray-200"></div>
                   <div className="flex flex-col items-center">
@@ -558,7 +558,7 @@ export default function Home() {
               <div className="space-y-8 text-left">
                 <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/80 backdrop-blur-sm rounded-full shadow-sm">
                   <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                  <span className="text-sm font-medium text-gray-700">Envíos a todo Maldonado</span>
+                  <span className="text-sm font-medium text-gray-700">Retiro en local disponible</span>
                 </div>
 
                 <h1 className="text-5xl xl:text-7xl font-bold text-primary leading-tight">
@@ -773,11 +773,11 @@ export default function Home() {
             <ScrollAnimation animation="scale-up" delay={100}>
             <div className="text-center">
               <div className="w-10 h-10 sm:w-16 sm:h-16 bg-secondary-salmon/20 rounded-full flex items-center justify-center mx-auto mb-2 sm:mb-4">
-                <span className="material-icons text-lg sm:text-3xl">local_shipping</span>
+                <span className="material-icons text-lg sm:text-3xl">store</span>
               </div>
-              <h4 className="font-bold text-primary mb-1 sm:mb-2 text-[11px] sm:text-lg leading-tight">Retiro o Envío</h4>
+              <h4 className="font-bold text-primary mb-1 sm:mb-2 text-[11px] sm:text-lg leading-tight">Retiro en Local</h4>
               <p className="text-[9px] sm:text-sm text-gray-600 leading-tight">
-                Retira en tienda o recibe en tu domicilio
+                Pedí online y retirá en nuestro local
               </p>
             </div>
             </ScrollAnimation>

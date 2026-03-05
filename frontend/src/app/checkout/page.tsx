@@ -98,7 +98,7 @@ function CheckoutContent() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [metodoPago, setMetodoPago] = useState<'efectivo' | 'transferencia' | 'mercadopago' | 'puntos'>(esCanjePuntos ? 'puntos' : 'efectivo');
-  const [tipoEntrega, setTipoEntrega] = useState<'delivery' | 'retiro'>('delivery');
+  const [tipoEntrega, setTipoEntrega] = useState<'delivery' | 'retiro'>('retiro');
   
   // Verificar si hay productos solo retiro en el carrito
   const [productosSoloRetiro, setProductosSoloRetiro] = useState<string[]>([]);
@@ -337,24 +337,7 @@ function CheckoutContent() {
       newErrors.telefono = `Teléfono inválido para ${country?.name}`;
     }
     
-    if (tipoEntrega === 'delivery') {
-      if (!formData.departamento) {
-        newErrors.departamento = 'Selecciona un departamento';
-      }
-      
-      if (formData.departamento === 'Maldonado' && !formData.zona) {
-        newErrors.zona = 'Selecciona una zona';
-      }
-      
-      // Bloquear si está fuera de zona
-      if (formData.zona === 'Otro' || fueraDeZona) {
-        newErrors.zona = 'Tu ubicación está fuera de nuestras zonas de delivery. Consulta por WhatsApp.';
-      }
-      
-      if (!formData.direccion.trim()) {
-        newErrors.direccion = 'La dirección es requerida';
-      }
-    }
+    // Delivery deshabilitado - solo retiro en local
     
     // Validar alias de transferencia si el método es transferencia
     if (metodoPago === 'transferencia' && !formData.aliasTransferencia.trim()) {
@@ -501,15 +484,15 @@ function CheckoutContent() {
         payment_method: metodoPago,
         // Si es MercadoPago, empezar como pendiente_pago hasta que se confirme el pago
         estado: metodoPago === 'mercadopago' ? 'pendiente_pago' : undefined,
-        address: tipoEntrega === 'delivery' ? formData.direccion : 'Retiro en local',
-        zone: formData.zona || 'Maldonado',
-        department: formData.departamento || 'Maldonado',
-        latitud: ubicacion?.lat || null,
-        longitud: ubicacion?.lng || null,
+        address: 'Retiro en local',
+        zone: 'Maldonado',
+        department: 'Maldonado',
+        latitud: null,
+        longitud: null,
         notes: esCanjePuntos ? `🎁 CANJE DE PUNTOS: ${canjeItem?.nombre}. ${formData.notas || ''}`.trim() : (formData.notas || null),
         points_earned: puntosAGanar, // Los puntos se suman cuando admin marca entregado
         points_used: esCanjePuntos ? puntosUsados : 0,
-        delivery_type: tipoEntrega,
+        delivery_type: 'retiro',
         customer_name: formData.nombre,
         customer_phone: telefonoFormateado,
         customer_email: formData.email,
@@ -644,7 +627,7 @@ function CheckoutContent() {
       `👤 ${form.nombre}%0A📱 ${form.telefono}%0A%0A` +
       `*Productos:*%0A${itemsList}%0A%0A` +
       `💰 *Total: $${totalAmount.toLocaleString()}*%0A%0A` +
-      `📍 ${tipoEntrega === 'delivery' ? form.direccion : 'Retiro en local'}`;
+      `📍 Retiro en local`;
     return `https://wa.me/${phone}?text=${msg}`;
   };
 
@@ -845,265 +828,33 @@ function CheckoutContent() {
                   Tipo de Entrega
                 </h2>
                 
-                {/* Advertencia productos solo retiro */}
-                {hayProductosSoloRetiro && (
-                  <div className="mb-4 p-4 bg-orange-50 border-2 border-orange-300 rounded-lg">
-                    <div className="flex items-start gap-3">
-                      <span className="text-2xl">🏪</span>
-                      <div className="flex-1">
-                        <p className="font-semibold text-orange-900 mb-1">
-                          Pedido solo disponible para retiro en local
-                        </p>
-                        <p className="text-sm text-orange-800 mb-2">
-                          Tu carrito incluye productos que solo se pueden retirar en nuestro local:
-                        </p>
-                        <ul className="list-disc list-inside text-sm text-orange-700 space-y-1">
-                          {productosSoloRetiro.map((nombre, idx) => (
-                            <li key={idx}>{nombre}</li>
-                          ))}
-                        </ul>
-                      </div>
+                {/* Retiro en local - único método disponible */}
+                <div className="mb-4 p-4 bg-pink-50 border-2 border-pink-300 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <span className="text-3xl">🏪</span>
+                    <div className="flex-1">
+                      <p className="font-semibold text-pink-900 text-lg">Retiro en Local</p>
+                      <p className="text-sm text-pink-800">Sin costo adicional</p>
                     </div>
+                    <span className="text-green-600 font-bold">Gratis</span>
                   </div>
-                )}
+                </div>
 
-                {/* Advertencia de día sin delivery */}
-                {deliveryBlockedToday && !hayProductosSoloRetiro && deliveryNotice.enabled && (
-                  <div className="mb-4 p-4 bg-blue-50 border-2 border-blue-300 rounded-lg">
-                    <div className="flex items-start gap-3">
-                      <span className="text-2xl">📅</span>
-                      <div className="flex-1">
-                        <p className="font-semibold text-blue-900 mb-1">
-                          {deliveryNotice.message}
-                        </p>
-                        <p className="text-sm text-blue-800">
-                          Puedes seleccionar retiro en local sin costo adicional
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Advertencia de hora límite de delivery */}
-                {deliveryBlockedByTime && !hayProductosSoloRetiro && deliveryTimeLimit.enabled && (
-                  <div className="mb-4 p-4 bg-amber-50 border-2 border-amber-300 rounded-lg">
-                    <div className="flex items-start gap-3">
-                      <span className="text-2xl">🕐</span>
-                      <div className="flex-1">
-                        <p className="font-semibold text-amber-900 mb-1">
-                          {deliveryTimeLimit.message}
-                        </p>
-                        <p className="text-sm text-amber-800">
-                          Ya pasó el horario límite para delivery. Puedes seleccionar retiro en local sin costo adicional
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-                
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <button
-                    type="button"
-                    onClick={() => !(hayProductosSoloRetiro || deliveryBlockedToday || deliveryBlockedByTime) && setTipoEntrega('delivery')}
-                    disabled={hayProductosSoloRetiro || deliveryBlockedToday || deliveryBlockedByTime}
-                    className={`p-4 rounded-lg border-2 transition-all ${
-                      (hayProductosSoloRetiro || deliveryBlockedToday || deliveryBlockedByTime)
-                        ? 'border-gray-200 bg-gray-100 opacity-50 cursor-not-allowed'
-                        : tipoEntrega === 'delivery'
-                          ? 'border-pink-500 bg-pink-50'
-                          : 'border-gray-200 hover:border-pink-300'
-                    }`}
-                  >
-                    <div className="text-2xl mb-2">🚗</div>
-                    <div className="font-semibold">Delivery</div>
-                    <div className="text-sm text-gray-500">
-                      {hayProductosSoloRetiro 
-                        ? '🏪 Solo retiro en local' 
-                        : deliveryBlockedToday 
-                          ? `📅 Hoy no hay delivery` 
-                          : deliveryBlockedByTime 
-                            ? `🕐 Pasó la hora límite (${deliveryTimeLimit.time}hs)` 
-                            : 'Te lo llevamos'}
-                    </div>
-                  </button>
-                  
-                  <button
-                    type="button"
-                    onClick={() => setTipoEntrega('retiro')}
-                    className={`p-4 rounded-lg border-2 transition-all ${
-                      tipoEntrega === 'retiro'
-                        ? 'border-pink-500 bg-pink-50'
-                        : 'border-gray-200 hover:border-pink-300'
-                    }`}
-                  >
-                    <div className="text-2xl mb-2">🏪</div>
-                    <div className="font-semibold">Retiro en Local</div>
-                    <div className="text-sm text-gray-500">Sin costo</div>
-                  </button>
+                <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-sm text-blue-800">
+                    ℹ️ Ya no contamos con servicio de delivery propio. Te avisamos por WhatsApp cuando tu pedido esté listo para retirar.
+                  </p>
                 </div>
                 
-                {tipoEntrega === 'delivery' && (
-                  <div className="space-y-4 pt-4 border-t">
-                    <div className="grid grid-cols-1 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-brown-700 mb-1">
-                          Departamento *
-                        </label>
-                        <select
-                          name="departamento"
-                          value={formData.departamento}
-                          onChange={handleInputChange}
-                          className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-pink-300 focus:border-pink-400 ${
-                            errors.departamento ? 'border-red-500' : 'border-gray-300'
-                          }`}
-                        >
-                          {departamentos.map(dep => (
-                            <option key={dep} value={dep}>{dep}</option>
-                          ))}
-                        </select>
-                        {formData.departamento !== 'Maldonado' && (
-                          <div className="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                            <p className="text-amber-700 text-sm mb-2">
-                              ⚠️ Delivery solo disponible en Maldonado.
-                            </p>
-                            <a
-                              href={`https://wa.me/59897865053?text=${encodeURIComponent(
-                                `¡Hola! 🍪\n\nQuiero consultar si hacen envío a ${formData.departamento}.\n\n¡Gracias!`
-                              )}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-2 text-sm text-green-600 hover:text-green-700 font-medium"
-                            >
-                              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-                              </svg>
-                              Consultar envío a {formData.departamento}
-                            </a>
-                          </div>
-                        )}
-                      </div>
-                      
-                      {formData.departamento === 'Maldonado' && (
-                        <div>
-                          <label className="block text-sm font-medium text-brown-700 mb-2">
-                            Ubicación de Entrega *
-                          </label>
-                          <p className="text-sm text-gray-600 mb-2">
-                            Marca tu ubicación en el mapa. La zona y el costo de envío se detectarán automáticamente.
-                          </p>
-                          <MapLocationPicker
-                            onLocationChange={handleLocationChange}
-                            initialLat={-34.9}
-                            initialLng={-54.95}
-                            className="rounded-lg overflow-hidden border border-gray-300"
-                          />
-                          {formData.zona && formData.zona !== 'Otro' && (
-                            <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-lg space-y-2">
-                              <p className="text-sm text-green-700">
-                                ✓ Zona detectada: <strong>{formData.zona}</strong> - Costo: ${costoEnvio}
-                              </p>
-                              <p className="text-xs text-gray-600">
-                                📍 {formData.direccion}
-                              </p>
-                              {formData.mapsLink && (
-                                <a
-                                  href={formData.mapsLink}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 font-medium hover:underline"
-                                >
-                                  <span className="material-icons text-sm">map</span>
-                                  Ver ubicación en el mapa
-                                </a>
-                              )}
-                            </div>
-                          )}
-                          {/* Mensaje cuando está fuera de zona - WhatsApp */}
-                          {formData.zona === 'Otro' && ubicacion && (
-                            <div className="mt-2 p-4 bg-amber-50 border border-amber-300 rounded-lg space-y-3">
-                              <div className="flex items-start gap-2">
-                                <span className="text-amber-500 text-xl">⚠️</span>
-                                <div>
-                                  <p className="text-sm font-medium text-amber-800">
-                                    Tu ubicación está fuera de nuestras zonas de delivery
-                                  </p>
-                                  <p className="text-xs text-amber-700 mt-1">
-                                    📍 {formData.direccion}
-                                  </p>
-                                </div>
-                              </div>
-                              <p className="text-sm text-gray-700">
-                                ¡No te preocupes! Contáctanos por WhatsApp para consultar si podemos hacer envío a tu zona.
-                              </p>
-                              <a
-                                href={`https://wa.me/59897865053?text=${encodeURIComponent(
-                                  `¡Hola! 🍪\n\nQuiero consultar si hacen envío a mi zona:\n\n📍 ${formData.direccion}\n🗺️ Coordenadas: ${ubicacion.lat.toFixed(5)}, ${ubicacion.lng.toFixed(5)}\n\n¡Gracias!`
-                                )}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex items-center justify-center gap-2 w-full px-4 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-medium"
-                              >
-                                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-                                </svg>
-                                Consultar por WhatsApp
-                              </a>
-                              <p className="text-xs text-center text-gray-500">
-                                Te responderemos a la brevedad 💬
-                              </p>
-                            </div>
-                          )}
-                          {errors.zona && (
-                            <p className="text-red-500 text-sm mt-1">{errors.zona}</p>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-brown-700 mb-1">
-                        Dirección *
-                      </label>
-                      <input
-                        type="text"
-                        name="direccion"
-                        value={formData.direccion}
-                        onChange={handleInputChange}
-                        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-pink-300 focus:border-pink-400 ${
-                          errors.direccion ? 'border-red-500' : 'border-gray-300'
-                        }`}
-                        placeholder="Calle, número, apartamento..."
-                      />
-                      {errors.direccion && (
-                        <p className="text-red-500 text-sm mt-1">{errors.direccion}</p>
-                      )}
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-brown-700 mb-1">
-                        Referencias (opcional)
-                      </label>
-                      <input
-                        type="text"
-                        name="referencias"
-                        value={formData.referencias}
-                        onChange={handleInputChange}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-300 focus:border-pink-400"
-                        placeholder="Ej: Casa blanca, portón negro..."
-                      />
-                    </div>
-                  </div>
-                )}
                 
-                {tipoEntrega === 'retiro' && (
-                  <div className="bg-cream-100 rounded-lg p-4 mt-4">
+                {/* Dirección de retiro */}
+                <div className="bg-cream-100 rounded-lg p-4 mt-4">
                     <h3 className="font-semibold text-brown-800 mb-2">📍 Dirección de retiro</h3>
                     <p className="text-brown-600">
                       MarLo Cookies<br />
                       Maldonado, Uruguay<br />
                     </p>
-                  </div>
-                )}
+                </div>
               </div>
               
               {/* Método de pago */}
@@ -1403,19 +1154,8 @@ function CheckoutContent() {
                   )}
                   
                   <div className="flex justify-between text-gray-600">
-                    <span>Envío {tipoEntrega === 'retiro' ? '(Retiro)' : formData.zona ? `(${formData.zona})` : '(Seleccionar zona)'}</span>
-                    {tipoEntrega === 'retiro' ? (
-                      <span className="text-green-600">Gratis</span>
-                    ) : envioGratis ? (
-                      <span className="text-green-600 font-medium">
-                        <span className="line-through text-gray-400 mr-2">${costoEnvio.toLocaleString()}</span>
-                        Gratis
-                      </span>
-                    ) : formData.zona ? (
-                      <span>${costoEnvio.toLocaleString()}</span>
-                    ) : (
-                      <span className="text-gray-400">--</span>
-                    )}
+                    <span>Envío (Retiro en local)</span>
+                    <span className="text-green-600">Gratis</span>
                   </div>
                   
                   {/* Recargo MercadoPago */}
@@ -1473,7 +1213,7 @@ function CheckoutContent() {
                 
                 <button
                   type="submit"
-                  disabled={submitting || items.length === 0 || (tipoEntrega === 'delivery' && fueraDeZona) || !storeStatus.open}
+                  disabled={submitting || items.length === 0 || !storeStatus.open}
                   className="w-full mt-6 bg-gradient-to-r from-pink-500 to-pink-600 text-white py-3 px-4 rounded-lg font-semibold hover:from-pink-600 hover:to-pink-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {submitting ? (
@@ -1485,11 +1225,6 @@ function CheckoutContent() {
                     <>
                       <span className="text-sm">⏰</span>
                       {storeStatus.message}
-                    </>
-                  ) : fueraDeZona && tipoEntrega === 'delivery' ? (
-                    <>
-                      <span className="text-sm">📍</span>
-                      Fuera de zona - Consulta por WhatsApp
                     </>
                   ) : (
                     <>
