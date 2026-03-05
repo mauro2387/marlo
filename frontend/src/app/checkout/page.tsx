@@ -840,10 +840,24 @@ function CheckoutContent() {
                   </div>
                 </div>
 
-                <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                  <p className="text-sm text-blue-800">
-                    ℹ️ Ya no contamos con servicio de delivery propio. Te avisamos por WhatsApp cuando tu pedido esté listo para retirar.
-                  </p>
+                <div className="mb-4 p-4 bg-orange-50 border border-orange-200 rounded-lg">
+                  <div className="flex items-start gap-3">
+                    <span className="text-2xl">🛵</span>
+                    <div className="flex-1">
+                      <p className="font-semibold text-orange-900 mb-1">¿Querés que te lo lleven?</p>
+                      <p className="text-sm text-orange-800 mb-3">
+                        Ya no contamos con delivery propio, pero podés pedir por PedidosYa.
+                      </p>
+                      <a
+                        href="https://www.pedidosya.com.uy/restaurantes/punta-del-este/marlo-cookies-c6f6c9e3-941a-4ccc-90e9-cae89edb4bab-menu"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 px-4 py-2.5 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-medium text-sm"
+                      >
+                        🛵 Pedir por PedidosYa
+                      </a>
+                    </div>
+                  </div>
                 </div>
                 
                 
