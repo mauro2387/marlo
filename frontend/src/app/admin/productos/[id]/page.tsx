@@ -37,7 +37,10 @@ export default function EditarProductoPage() {
     imagenes: [] as string[],
     stock: '0',
     es_limitado: false,
-    activo: true
+    activo: true,
+    es_mini: false,
+    permite_minis: false,
+    precio_mini: ''
   });
 
   useEffect(() => {
@@ -64,7 +67,10 @@ export default function EditarProductoPage() {
           imagenes: imagenes,
           stock: product.stock.toString(),
           es_limitado: product.es_limitado,
-          activo: product.activo
+          activo: product.activo,
+          es_mini: product.es_mini || false,
+          permite_minis: product.permite_minis || false,
+          precio_mini: product.precio_mini ? product.precio_mini.toString() : ''
         });
       }
     } catch (err) {
@@ -93,7 +99,7 @@ export default function EditarProductoPage() {
     setError(null);
 
     try {
-      const productData = {
+      const productData: any = {
         nombre: formData.nombre.trim(),
         descripcion: formData.descripcion.trim(),
         precio: parseFloat(formData.precio),
@@ -102,7 +108,10 @@ export default function EditarProductoPage() {
         imagenes: formData.imagenes,
         stock: parseInt(formData.stock),
         es_limitado: formData.es_limitado,
-        activo: formData.activo
+        activo: formData.activo,
+        es_mini: formData.categoria === 'cookies' ? formData.es_mini : false,
+        permite_minis: formData.categoria === 'boxes' ? formData.permite_minis : false,
+        precio_mini: formData.categoria === 'boxes' && formData.permite_minis ? parseFloat(formData.precio_mini) || 0 : 0
       };
 
       if (!productData.nombre) {
@@ -266,6 +275,65 @@ export default function EditarProductoPage() {
           </label>
         </div>
 
+        {/* Mini cookies - solo visible para cookies */}
+        {formData.categoria === 'cookies' && (
+          <div className="p-4 bg-pink-50 rounded-lg border border-pink-200 space-y-3">
+            <p className="text-sm font-medium text-pink-800">🍪 Tamaño Mini:</p>
+            <label className="flex items-start gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                name="es_mini"
+                checked={formData.es_mini}
+                onChange={handleChange}
+                className="w-4 h-4 mt-0.5 text-pink-600 border-gray-300 rounded focus:ring-pink-500"
+              />
+              <div>
+                <span className="text-sm font-medium text-gray-700">Es Mini Cookie</span>
+                <p className="text-xs text-gray-500">Esta cookie es tamaño mini y solo aparecerá en boxes que permitan minis</p>
+              </div>
+            </label>
+          </div>
+        )}
+
+        {/* Box de minis - solo visible para boxes */}
+        {formData.categoria === 'boxes' && (
+          <div className="p-4 bg-purple-50 rounded-lg border border-purple-200 space-y-3">
+            <p className="text-sm font-medium text-purple-800">📦 Box de Minis:</p>
+            <label className="flex items-start gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                name="permite_minis"
+                checked={formData.permite_minis}
+                onChange={handleChange}
+                className="w-4 h-4 mt-0.5 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+              />
+              <div>
+                <span className="text-sm font-medium text-gray-700">Permite Mini Cookies</span>
+                <p className="text-xs text-gray-500">Esta box puede armarse con mini cookies como opción alternativa</p>
+              </div>
+            </label>
+
+            {formData.permite_minis && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Precio Box Mini (UYU) *
+                </label>
+                <input
+                  type="number"
+                  name="precio_mini"
+                  value={formData.precio_mini}
+                  onChange={handleChange}
+                  min="1"
+                  step="1"
+                  placeholder="Ej: 350"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                />
+                <p className="text-xs text-gray-500 mt-1">Precio cuando el cliente elige armar esta box con mini cookies</p>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Vista previa */}
         <div className="p-4 bg-cream-50 rounded-lg">
           <p className="text-sm font-medium text-gray-600 mb-3">Vista Previa:</p>
@@ -281,6 +349,8 @@ export default function EditarProductoPage() {
               <h4 className="font-semibold text-brown-800">
                 {formData.nombre || 'Nombre del producto'}
                 {formData.es_limitado && <span className="ml-2 text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded">⭐ Limitado</span>}
+                {formData.es_mini && <span className="ml-2 text-xs bg-pink-100 text-pink-800 px-2 py-0.5 rounded">🍪 Mini</span>}
+                {formData.permite_minis && <span className="ml-2 text-xs bg-purple-100 text-purple-800 px-2 py-0.5 rounded">📦 Permite minis</span>}
                 {formData.imagenes.length > 1 && (
                   <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded">
                     📷 {formData.imagenes.length} imágenes

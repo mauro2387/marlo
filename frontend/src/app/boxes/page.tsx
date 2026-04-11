@@ -20,6 +20,8 @@ interface Box {
   ahorro: number;
   es_premium: boolean;
   orden: number;
+  permite_minis: boolean;
+  precio_mini: number;
 }
 
 interface Cookie {
@@ -28,6 +30,7 @@ interface Cookie {
   categoria: string;
   imagen: string;
   stock: number;
+  es_mini: boolean;
 }
 
 export default function BoxesPage() {
@@ -36,6 +39,8 @@ export default function BoxesPage() {
   const { user } = useAuthStore();
   const [boxes, setBoxes] = useState<Box[]>([]);
   const [cookies, setCookies] = useState<Cookie[]>([]);
+  const [miniCookies, setMiniCookies] = useState<Cookie[]>([]);
+  const [modoMini, setModoMini] = useState(false);
   const [loading, setLoading] = useState(true);
   
   // Parámetros de canje
@@ -53,9 +58,12 @@ export default function BoxesPage() {
   const cartItems = useCartStore((state) => state.items);
   const getTotalQuantityForProduct = useCartStore((state) => state.getTotalQuantityForProduct);
 
+  // Cookies activas según modo (normal o mini)
+  const activeCookies = modoMini ? miniCookies : cookies;
+
   // Calcular stock disponible de una cookie (stock total - en carrito - seleccionadas en esta box)
   const getAvailableStock = (cookieId: string): number => {
-    const cookie = cookies.find(c => c.id === cookieId);
+    const cookie = activeCookies.find(c => c.id === cookieId);
     if (!cookie) return 0;
     
     const inCart = getTotalQuantityForProduct(cookieId);
@@ -109,6 +117,8 @@ export default function BoxesPage() {
           ahorro: p.ahorro || 0,
           es_premium: p.es_limitado || false,
           orden: p.orden || 999,
+          permite_minis: p.permite_minis || false,
+          precio_mini: p.precio_mini || 0,
         }))
         // Ordenar por cantidad de cookies: la más chica primero, la más grande de última
         .sort((a: Box, b: Box) => a.cantidad_cookies - b.cantidad_cookies);
@@ -117,18 +127,37 @@ export default function BoxesPage() {
         .filter((p: any) => 
           p.categoria === 'cookies' && 
           p.activo && 
-          !p.no_disponible_box  // Excluir productos marcados como no disponibles para box
+          !p.no_disponible_box &&
+          !p.es_mini  // Excluir minis del listado normal
         )
         .map((p: any) => ({
           id: p.id,
           nombre: p.nombre,
           categoria: p.es_limitado ? 'especial' : 'clasica',
           imagen: p.imagen || '',
-          stock: p.stock || 0
+          stock: p.stock || 0,
+          es_mini: false
+        }));
+
+      const miniCookieProducts = (allProducts || [])
+        .filter((p: any) => 
+          p.categoria === 'cookies' && 
+          p.activo && 
+          !p.no_disponible_box &&
+          p.es_mini  // Solo minis
+        )
+        .map((p: any) => ({
+          id: p.id,
+          nombre: p.nombre,
+          categoria: p.es_limitado ? 'especial' : 'clasica',
+          imagen: p.imagen || '',
+          stock: p.stock || 0,
+          es_mini: true
         }));
       
       setBoxes(boxProducts);
       setCookies(cookieProducts);
+      setMiniCookies(miniCookieProducts);
     } catch (err) {
       console.error('Error cargando datos:', err);
     } finally {
@@ -153,7 +182,7 @@ export default function BoxesPage() {
     
     // Validar stock disponible
     if (!canAddCookie(id)) {
-      const cookie = cookies.find(c => c.id === id);
+      const cookie = activeCookies.find(c => c.id === id);
       addNotification({
         type: 'error',
         message: `No hay más stock de ${cookie?.nombre || 'esta cookie'}`,
@@ -182,6 +211,7 @@ export default function BoxesPage() {
   const cambiarTamano = (cantidad: number) => {
     setTamanoSeleccionado(cantidad);
     setCookiesSeleccionadas({});
+    setModoMini(false);
   };
 
   const agregarBoxAlCarrito = () => {
@@ -197,7 +227,7 @@ export default function BoxesPage() {
     // Crear lista de cookies incluidas para guardar en el carrito
     const cookiesIncluidas = Object.entries(cookiesSeleccionadas)
       .map(([id, cantidad]) => {
-        const cookie = cookies.find(c => c.id === id);
+        const cookie = activeCookies.find(c => c.id === id);
         return {
           id,
           nombre: cookie?.nombre || '',
@@ -238,10 +268,11 @@ export default function BoxesPage() {
     }
 
     // Flujo normal (no es canje)
+    const precioFinal = modoMini ? boxActual!.precio_mini : boxActual!.precio;
     addItem({
       id: `box-custom-${Date.now()}`,
-      nombre: `Box ${tamanoSeleccionado} Cookies`,
-      precio: boxActual!.precio,
+      nombre: modoMini ? `Box ${tamanoSeleccionado} Mini Cookies` : `Box ${tamanoSeleccionado} Cookies`,
+      precio: precioFinal,
       imagen: '',
       categoria: 'boxes',
       cookiesIncluidas,
@@ -361,6 +392,43 @@ export default function BoxesPage() {
           </ScrollAnimation>
           )}
 
+          {/* Toggle Normal / Mini - solo si la box seleccionada permite minis y hay minis disponibles */}
+          {!esCanje && boxActual?.permite_minis && miniCookies.length > 0 && (
+            <div className="mb-6 sm:mb-8">
+              <div className="flex items-center gap-3 p-3 sm:p-4 bg-white rounded-xl border-2 border-pink-200 shadow-sm max-w-md">
+                <span className="text-xl">🍪</span>
+                <span className="text-sm font-medium text-gray-700">Tipo:</span>
+                <div className="flex bg-gray-100 rounded-lg p-1 flex-1">
+                  <button
+                    onClick={() => { setModoMini(false); setCookiesSeleccionadas({}); }}
+                    className={`flex-1 px-3 py-2 rounded-md text-sm font-medium transition-all ${
+                      !modoMini
+                        ? 'bg-primary text-white shadow-sm'
+                        : 'text-gray-600 hover:text-gray-800'
+                    }`}
+                  >
+                    Normal
+                  </button>
+                  <button
+                    onClick={() => { setModoMini(true); setCookiesSeleccionadas({}); }}
+                    className={`flex-1 px-3 py-2 rounded-md text-sm font-medium transition-all ${
+                      modoMini
+                        ? 'bg-pink-500 text-white shadow-sm'
+                        : 'text-gray-600 hover:text-gray-800'
+                    }`}
+                  >
+                    Mini 🍪
+                  </button>
+                </div>
+              </div>
+              {modoMini && (
+                <p className="text-xs text-pink-600 mt-2 ml-1">
+                  Precio box mini: <strong>${boxActual.precio_mini.toLocaleString('es-UY')}</strong>
+                </p>
+              )}
+            </div>
+          )}
+
           {/* Layout principal: Cookies + Checkout lateral */}
           <ScrollAnimation animation="fade-in" delay={200}>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
@@ -369,7 +437,7 @@ export default function BoxesPage() {
               <h2 className="text-base sm:text-lg lg:text-xl font-bold text-primary mb-3 sm:mb-4 flex items-center justify-between">
                 <span className="flex items-center gap-2">
                   <span className="w-6 h-6 sm:w-8 sm:h-8 bg-primary text-white rounded-full flex items-center justify-center text-xs sm:text-sm">{esCanje ? '1' : '2'}</span>
-                  Selecciona tus {esCanje ? cantidadCanje : ''} cookies {esCanje ? 'gratis' : ''}
+                  Selecciona tus {esCanje ? cantidadCanje : ''} {modoMini ? 'mini cookies' : 'cookies'} {esCanje ? 'gratis' : ''}
                 </span>
                 <span className={`px-2 sm:px-4 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-bold ${
                   restantes === 0 ? 'bg-green-100 text-green-700' : 'bg-secondary-crema text-primary'
@@ -388,7 +456,12 @@ export default function BoxesPage() {
 
               {/* Grid de 3 columnas en móvil */}
               <div className="grid grid-cols-3 sm:grid-cols-2 md:grid-cols-3 gap-2 sm:gap-3 lg:gap-4 pb-32 lg:pb-0">
-                {cookies.map(cookie => {
+                {activeCookies.length === 0 ? (
+                  <div className="col-span-full text-center py-12 text-gray-400">
+                    <span className="text-4xl block mb-2">🍪</span>
+                    <p className="text-sm">No hay {modoMini ? 'mini cookies' : 'cookies'} disponibles</p>
+                  </div>
+                ) : activeCookies.map(cookie => {
                   const availableStock = getAvailableStock(cookie.id);
                   const noStock = availableStock <= 0 && !cookiesSeleccionadas[cookie.id];
                   const canAdd = canAddCookie(cookie.id);
@@ -463,7 +536,7 @@ export default function BoxesPage() {
                       {esCanje ? (
                         <span className="text-lg font-bold text-green-600">GRATIS</span>
                       ) : (
-                        <span className="text-lg font-bold text-primary">${boxActual?.precio.toLocaleString('es-UY')}</span>
+                        <span className="text-lg font-bold text-primary">${(modoMini ? boxActual?.precio_mini : boxActual?.precio)?.toLocaleString('es-UY')}</span>
                       )}
                       <span className="text-xs text-gray-500">{totalSeleccionadas}/{esCanje ? cantidadCanje : tamanoSeleccionado}</span>
                     </div>
@@ -511,7 +584,7 @@ export default function BoxesPage() {
                 <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6 border border-gray-100">
                   <h3 className="text-base sm:text-lg font-bold text-primary mb-3 sm:mb-4 flex items-center gap-2">
                     <span className="material-icons text-lg sm:text-xl">shopping_cart</span>
-                    Tu Box
+                    Tu Box {modoMini ? 'Mini' : ''}
                   </h3>
 
                   {totalSeleccionadas === 0 ? (
@@ -524,7 +597,7 @@ export default function BoxesPage() {
                       {/* Lista de cookies seleccionadas */}
                       <div className="space-y-1.5 sm:space-y-2 mb-3 sm:mb-4 max-h-48 sm:max-h-64 overflow-y-auto">
                         {Object.entries(cookiesSeleccionadas).map(([id, cantidad]) => {
-                          const cookie = cookies.find(c => c.id === id);
+                          const cookie = activeCookies.find(c => c.id === id);
                           return (
                             <div key={id} className="flex items-center justify-between py-1.5 sm:py-2 border-b border-gray-100">
                               <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
@@ -569,10 +642,10 @@ export default function BoxesPage() {
                     ) : (
                       <>
                         <div className="flex justify-between items-center mb-1 sm:mb-2">
-                          <span className="text-gray-600 text-xs sm:text-sm">Box {tamanoSeleccionado} cookies</span>
-                          <span className="font-bold text-base sm:text-lg text-primary">${boxActual?.precio.toLocaleString('es-UY')}</span>
+                          <span className="text-gray-600 text-xs sm:text-sm">Box {tamanoSeleccionado} {modoMini ? 'mini cookies' : 'cookies'}</span>
+                          <span className="font-bold text-base sm:text-lg text-primary">${(modoMini ? boxActual?.precio_mini : boxActual?.precio)?.toLocaleString('es-UY')}</span>
                         </div>
-                        {boxActual?.ahorro && boxActual.ahorro > 0 && (
+                        {!modoMini && boxActual?.ahorro && boxActual.ahorro > 0 && (
                           <div className="flex justify-between items-center text-xs sm:text-sm">
                             <span className="text-green-600">Ahorro</span>
                             <span className="font-semibold text-green-600">{boxActual.ahorro}%</span>

@@ -35,8 +35,8 @@ type FeaturedCard = {
   orden: number;
 };
 
-// Fallback por si no hay imágenes en la base de datos
-const defaultCookieImages = ['/IMG/cc.png', '/IMG/2.png', '/IMG/3.png'];
+// Las imágenes flotantes se cargan desde la base de datos
+const defaultCookieImages: string[] = [];
 
 // Helper para renderizar imagen o emoji con manejo de errores React-friendly
 const ProductImage = ({ src, alt, className }: { src: string; alt: string; className?: string }) => {
@@ -166,7 +166,7 @@ export default function Home() {
           setCookieImages(data.map((img: any) => img.imagen_url));
         }
       } catch (err) {
-        console.log('Usando imágenes por defecto');
+        console.log('No se pudieron cargar imágenes flotantes');
       }
     };
     loadFloatingImages();

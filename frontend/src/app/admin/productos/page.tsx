@@ -285,11 +285,23 @@ function ProductosContent() {
                       </div>
                       <div>
                         <p className="font-medium text-brown-800">{product.nombre}</p>
-                        {product.es_limitado && (
-                          <span className="text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded">
-                            ⭐ Limitado
-                          </span>
-                        )}
+                        <div className="flex flex-wrap gap-1 mt-0.5">
+                          {product.es_limitado && (
+                            <span className="text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded">
+                              ⭐ Limitado
+                            </span>
+                          )}
+                          {(product as any).es_mini && (
+                            <span className="text-xs bg-pink-100 text-pink-800 px-2 py-0.5 rounded">
+                              🍪 Mini
+                            </span>
+                          )}
+                          {(product as any).permite_minis && (
+                            <span className="text-xs bg-purple-100 text-purple-800 px-2 py-0.5 rounded">
+                              📦 Permite minis
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </td>
