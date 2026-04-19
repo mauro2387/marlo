@@ -18,28 +18,32 @@ interface FAQCategory {
 
 const faqData: FAQCategory[] = [
   {
-    title: 'Pedidos y Entregas',
-    icon: 'local_shipping',
+    title: 'Pedidos y Retiro',
+    icon: 'shopping_bag',
     items: [
       {
-        question: '¿Cuánto tiempo tarda mi pedido en llegar?',
-        answer: 'Los pedidos se entregan generalmente dentro del mismo día o al día siguiente, dependiendo de la hora en que se realizó el pedido y la zona de entrega. Los pedidos realizados antes de las 16:00 hrs suelen entregarse el mismo día.'
+        question: '¿Cómo hago un pedido?',
+        answer: 'Para hacer un pedido, simplemente navega a nuestra tienda, agrega los productos al carrito y sigue el proceso de checkout. Puedes pagar con efectivo, transferencia bancaria o MercadoPago.'
       },
       {
-        question: '¿A qué zonas hacen envíos?',
-        answer: 'Actualmente realizamos envíos a Punta del Este, Maldonado, y zonas aledañas. El costo de envío varía según la zona. Puedes ver el costo exacto en el checkout.'
+        question: '¿Cómo funciona el retiro en local?',
+        answer: 'Hacés tu pedido online, te avisamos por WhatsApp cuando esté listo y lo retirás en nuestro local. El retiro es siempre gratis.'
       },
       {
-        question: '¿Puedo retirar mi pedido en el local?',
-        answer: 'Sí, ofrecemos la opción de retiro en tienda sin costo adicional. Estamos ubicados en Av. Juan Gorlero casi 25, Punta del Este. Nuestro horario es de Miércoles a Lunes de 15:00 a 20:00 hrs.'
+        question: '¿Hacen delivery?',
+        answer: 'No contamos con servicio de delivery propio. Los envíos se realizan únicamente a través de PedidosYa. También podés hacer tu pedido online y retirarlo en nuestro local sin costo.'
       },
       {
-        question: '¿Cuál es el monto mínimo de pedido?',
-        answer: 'No tenemos un monto mínimo de pedido, puedes ordenar la cantidad que desees.'
+        question: '¿Cuáles son los horarios del local?',
+        answer: 'Nuestro local abre de viernes a domingo de 15:00 a 20:00hs.'
       },
       {
-        question: '¿Puedo programar la entrega para otro día?',
-        answer: 'Sí, al momento de hacer tu pedido puedes indicar en las notas del pedido si necesitas que llegue en un día específico y coordinaremos contigo por WhatsApp.'
+        question: '¿Puedo modificar o cancelar mi pedido?',
+        answer: 'Puedes modificar o cancelar tu pedido contactándonos por WhatsApp antes de que cambie a estado "preparando". Una vez en preparación, no es posible hacer cambios.'
+      },
+      {
+        question: '¿Cómo sé el estado de mi pedido?',
+        answer: 'Puedes ver el estado de tus pedidos en la sección "Mis Pedidos" de tu perfil. También te notificamos por WhatsApp cada vez que tu pedido cambia de estado.'
       }
     ]
   },
@@ -65,7 +69,7 @@ const faqData: FAQCategory[] = [
       },
       {
         question: '¿Qué son los boxes y cómo funcionan?',
-        answer: 'Los boxes son cajas que puedes armar con los sabores que prefieras. Tenemos boxes de 4, 6 y 9 unidades. Tú eliges qué sabores incluir en cada uno.'
+        answer: 'Los boxes son cajas que puedes armar con los sabores que prefieras. Tenemos boxes de 4, 6 y 12 unidades. Tú eliges qué sabores incluir en cada uno.'
       }
     ]
   },
@@ -82,10 +86,6 @@ const faqData: FAQCategory[] = [
         answer: 'MercadoPago cobra una comisión por cada transacción que debemos trasladar al precio final. Por eso ofrecemos otras opciones de pago sin recargo como efectivo y transferencia.'
       },
       {
-        question: '¿Cuántos pedidos puedo tener pendientes con efectivo o transferencia?',
-        answer: 'Puedes tener hasta 2 pedidos pendientes con pago en efectivo o transferencia. Si tienes 2 pedidos sin entregar, deberás esperar a que uno se complete o usar MercadoPago para nuevos pedidos.'
-      },
-      {
         question: '¿Cómo funciona el pago por transferencia?',
         answer: 'Al elegir transferencia, recibirás los datos bancarios para realizar el pago. Una vez confirmada la transferencia, procederemos a preparar tu pedido.'
       }
@@ -98,10 +98,6 @@ const faqData: FAQCategory[] = [
       {
         question: '¿Cómo funciona el programa de puntos?',
         answer: 'Por cada $1 que gastes, acumulas 1 punto. Estos puntos los puedes canjear por productos gratis y descuentos.'
-      },
-      {
-        question: '¿Los puntos tienen vencimiento?',
-        answer: 'No, tus puntos no vencen. Puedes acumularlos el tiempo que quieras hasta alcanzar la recompensa que desees.'
       },
       {
         question: '¿Qué premios puedo canjear con mis puntos?',
@@ -137,7 +133,7 @@ const faqData: FAQCategory[] = [
     items: [
       {
         question: '¿Puedo cancelar mi pedido?',
-        answer: 'Puedes cancelar tu pedido mientras esté en estado "Preparando". Una vez que el pedido está en camino o listo para entrega, no es posible cancelarlo.'
+        answer: 'Puedes cancelar tu pedido mientras esté en estado "Preparando". Una vez que el pedido está listo para entrega, no es posible cancelarlo.'
       },
       {
         question: '¿Qué pasa si mi pedido llega en mal estado?',
