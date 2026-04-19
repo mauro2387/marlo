@@ -50,7 +50,7 @@ function Notification({ type, message, onClose }: NotificationProps) {
 
   return (
     <div
-      className={`${colors[type]} border-2 rounded-lg shadow-lg p-4 pr-12 min-w-[300px] max-w-md animate-slide-in-right relative`}
+      className={`${colors[type]} border-2 rounded-lg shadow-lg p-4 pr-12 min-w-0 max-w-[calc(100vw-2rem)] sm:min-w-[300px] sm:max-w-md animate-slide-in-right relative`}
     >
       <div className="flex items-start gap-3">
         <span className="text-2xl flex-shrink-0">{icons[type]}</span>

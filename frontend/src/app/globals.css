@@ -6,8 +6,11 @@
 @import 'leaflet/dist/leaflet.css';
 
 @layer base {
+  html {
+    @apply overflow-x-hidden;
+  }
   body {
-    @apply bg-white text-gray-900;
+    @apply bg-white text-gray-900 overflow-x-hidden;
   }
 }
 
