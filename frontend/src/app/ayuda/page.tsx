@@ -20,11 +20,6 @@ const faqs: FAQItem[] = [
   },
   {
     category: 'Pedidos',
-    question: '¿Cuánto tiempo tarda mi pedido?',
-    answer: 'Los pedidos se preparan para retiro en local. Te avisamos por WhatsApp cuando tu pedido esté listo (generalmente en 1-2 horas).'
-  },
-  {
-    category: 'Pedidos',
     question: '¿Puedo modificar o cancelar mi pedido?',
     answer: 'Puedes modificar o cancelar tu pedido contactándonos por WhatsApp antes de que cambie a estado "preparando". Una vez en preparación, no es posible hacer cambios.'
   },
@@ -42,7 +37,12 @@ const faqs: FAQItem[] = [
   {
     category: 'Retiro',
     question: '¿Hacen delivery?',
-    answer: 'Actualmente no contamos con servicio de delivery propio. Podés hacer tu pedido online y retirarlo en nuestro local sin costo adicional.'
+    answer: 'No contamos con servicio de delivery propio. Los envíos se realizan únicamente a través de PedidosYa. También podés hacer tu pedido online y retirarlo en nuestro local sin costo.'
+  },
+  {
+    category: 'Retiro',
+    question: '¿Cuáles son los horarios del local?',
+    answer: 'Nuestro local abre de viernes a domingo de 15:00 a 20:00hs.'
   },
   {
     category: 'Retiro',
@@ -87,11 +87,6 @@ const faqs: FAQItem[] = [
     question: '¿Cuántos puntos necesito para obtener un descuento?',
     answer: 'Puedes canjear puntos desde 100 puntos = $50 de descuento. Los descuentos van aumentando: 200 puntos = $100, 500 puntos = $300, 1000 puntos = $700.'
   },
-  {
-    category: 'Puntos',
-    question: '¿Los puntos tienen vencimiento?',
-    answer: 'No, tus puntos no vencen mientras tu cuenta esté activa. ¡Acumúlalos sin preocupaciones!'
-  },
   // Productos
   {
     category: 'Productos',
@@ -106,7 +101,7 @@ const faqs: FAQItem[] = [
   {
     category: 'Productos',
     question: '¿Puedo personalizar mi box de cookies?',
-    answer: '¡Sí! Ofrecemos box personalizados donde puedes elegir los sabores que prefieras. Visita nuestra sección de Box para armar el tuyo.'
+    answer: '¡Sí! Ofrecemos box personalizados de 4, 6 y 12 cookies donde puedes elegir los sabores que prefieras. Visita nuestra sección de Box para armar el tuyo.'
   },
 ];
 

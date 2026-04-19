@@ -140,40 +140,42 @@ export default function ContactoPage() {
       <Navbar />
 
       <main className="pt-[120px] min-h-screen bg-gradient-to-br from-secondary-crema via-white to-secondary-rosa/10">
-        <section className="py-12">
-            <div className="container mx-auto px-4 lg:px-8">
-              <div className="max-w-3xl mx-auto text-center">
-                <span className="material-icons text-primary mb-4" style={{fontSize: '64px'}}>mail</span>
-                <h1 className="text-4xl lg:text-5xl font-bold text-primary mb-4">
-                  Contáctanos
-                </h1>
-                <p className="text-xl text-gray-600 mb-6">
-                  ¿Tenés alguna pregunta? Estamos acá para ayudarte.
-                </p>
-                
-                {/* Tabs */}
-                <div className="inline-flex bg-white rounded-xl shadow-md p-1.5 gap-1">
-                  <button
+        <section className="py-8 sm:py-12">
+          <div className="container mx-auto px-4 lg:px-8">
+            <div className="max-w-3xl mx-auto text-center">
+              <span className="material-icons text-primary mb-4 text-5xl sm:text-6xl" style={{fontSize: undefined}}>mail</span>
+              <h1 className="text-2xl sm:text-4xl lg:text-5xl font-bold text-primary mb-3 sm:mb-4">
+                Contáctanos
+              </h1>
+              <p className="text-base sm:text-xl text-gray-600 mb-4 sm:mb-6">
+                ¿Tenés alguna pregunta? Estamos acá para ayudarte.
+              </p>
+              
+              {/* Tabs */}
+              <div className="inline-flex bg-white rounded-xl shadow-md p-1.5 gap-1">
+                <button
                   onClick={() => { setActiveTab('contacto'); setEnviado(false); setError(''); }}
-                  className={`px-6 py-3 rounded-lg font-semibold transition-all flex items-center gap-2 ${
+                  className={`px-3 sm:px-6 py-2.5 sm:py-3 rounded-lg font-semibold transition-all flex items-center gap-1.5 sm:gap-2 text-sm sm:text-base ${
                     activeTab === 'contacto' 
                       ? 'bg-primary text-white shadow-md' 
                       : 'text-gray-600 hover:bg-gray-100'
                   }`}
                 >
-                  <span className="material-icons text-xl">chat</span>
-                  Contacto General
+                  <span className="material-icons text-lg sm:text-xl">chat</span>
+                  <span className="hidden sm:inline">Contacto General</span>
+                  <span className="sm:hidden">Contacto</span>
                 </button>
                 <button
                   onClick={() => { setActiveTab('mayorista'); setEnviado(false); setError(''); }}
-                  className={`px-6 py-3 rounded-lg font-semibold transition-all flex items-center gap-2 ${
+                  className={`px-3 sm:px-6 py-2.5 sm:py-3 rounded-lg font-semibold transition-all flex items-center gap-1.5 sm:gap-2 text-sm sm:text-base ${
                     activeTab === 'mayorista' 
                       ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md' 
                       : 'text-gray-600 hover:bg-gray-100'
                   }`}
                 >
-                  <span className="material-icons text-xl">storefront</span>
-                  Pedidos por Mayor
+                  <span className="material-icons text-lg sm:text-xl">storefront</span>
+                  <span className="hidden sm:inline">Pedidos por Mayor</span>
+                  <span className="sm:hidden">Mayorista</span>
                 </button>
               </div>
             </div>
@@ -182,7 +184,7 @@ export default function ContactoPage() {
 
         <div className="container mx-auto px-4 lg:px-8 pb-16">
           {/* Grid principal - Formulario a la izquierda, Info compacta a la derecha */}
-          <div className="grid lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          <div className="grid lg:grid-cols-3 gap-6 lg:gap-8 max-w-6xl mx-auto">
             
             {/* Formulario - Ocupa 2 columnas */}
             <div className="lg:col-span-2">
@@ -663,15 +665,11 @@ export default function ContactoPage() {
                   </h3>
                   <div className="space-y-1 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Lun - Vie</span>
-                      <span className="font-semibold text-gray-800">9:00 - 19:00</span>
+                      <span className="text-gray-600">Viernes - Domingo</span>
+                      <span className="font-semibold text-gray-800">15:00 - 20:00</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Sábado</span>
-                      <span className="font-semibold text-gray-800">10:00 - 18:00</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Domingo</span>
+                      <span className="text-gray-600">Lunes - Jueves</span>
                       <span className="font-semibold text-gray-500">Cerrado</span>
                     </div>
                   </div>
@@ -712,19 +710,21 @@ export default function ContactoPage() {
                 </div>
               </div>
 
-              {/* Zonas de Delivery */}
+              {/* Delivery por PedidosYa */}
               <div className="bg-white rounded-2xl shadow-lg p-6">
                 <h3 className="text-lg font-bold text-primary mb-3 flex items-center gap-2">
-                  <span className="material-icons">local_shipping</span>
-                  Zonas de Delivery
+                  <span className="material-icons">delivery_dining</span>
+                  Delivery
                 </h3>
-                <div className="flex flex-wrap gap-2">
-                  {['Punta del Este', 'La Barra', 'Manantiales', 'San Carlos', 'Maldonado'].map((zona) => (
-                    <span key={zona} className="px-3 py-1 bg-secondary-crema text-primary rounded-full text-xs font-medium">
-                      {zona}
-                    </span>
-                  ))}
-                </div>
+                <p className="text-sm text-gray-600 mb-3">Los envíos se realizan únicamente a través de PedidosYa.</p>
+                <a
+                  href="https://www.pedidosya.com.uy/restaurantes/punta-del-este/marlo-cookies-c6f6c9e3-941a-4ccc-90e9-cae89edb4bab-menu"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-medium text-sm"
+                >
+                  🛵 Pedir por PedidosYa
+                </a>
               </div>
             </div>
           </div>
