@@ -182,16 +182,16 @@ export default function ContactoPage() {
           </div>
         </section>
 
-        <div className="container mx-auto px-4 lg:px-8 pb-16">
+        <div className="container mx-auto px-4 lg:px-8 pb-16 overflow-hidden">
           {/* Grid principal - Formulario a la izquierda, Info compacta a la derecha */}
-          <div className="grid lg:grid-cols-3 gap-6 lg:gap-8 max-w-6xl mx-auto">
+          <div className="grid lg:grid-cols-3 gap-6 lg:gap-8 max-w-6xl mx-auto w-full">
             
             {/* Formulario - Ocupa 2 columnas */}
-            <div className="lg:col-span-2">
+            <div className="lg:col-span-2 min-w-0">
                 {activeTab === 'contacto' ? (
                   /* FORMULARIO CONTACTO GENERAL */
-                  <div className="bg-white rounded-2xl shadow-lg p-8">
-                    <h2 className="text-2xl font-bold text-primary mb-6 flex items-center gap-2">
+                  <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6 lg:p-8">
+                    <h2 className="text-xl sm:text-2xl font-bold text-primary mb-4 sm:mb-6 flex items-center gap-2">
                     <span className="material-icons">edit</span>
                     Envianos un Mensaje
                   </h2>
@@ -342,7 +342,7 @@ export default function ContactoPage() {
               </div>
               ) : (
                 /* FORMULARIO PEDIDOS POR MAYOR */
-                <div className="bg-white rounded-2xl shadow-lg p-8">
+                <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6 lg:p-8">
                   <div className="flex items-center gap-3 mb-6">
                     <div className="w-12 h-12 bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl flex items-center justify-center">
                       <span className="material-icons text-white text-2xl">storefront</span>
@@ -566,9 +566,9 @@ export default function ContactoPage() {
             </div>
 
             {/* Sidebar de información - 1 columna */}
-            <div className="space-y-4">
+            <div className="space-y-4 min-w-0">
               {/* Contacto directo */}
-              <div className="bg-white rounded-2xl shadow-lg p-6">
+              <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6">
                 <h3 className="text-lg font-bold text-primary mb-4 flex items-center gap-2">
                   <span className="material-icons">contact_phone</span>
                   Contacto Directo
@@ -638,10 +638,10 @@ export default function ContactoPage() {
               </Link>
 
               {/* Ubicación y Horarios en una sola card */}
-              <div className="bg-white rounded-2xl shadow-lg p-6">
+              <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6">
                 <div className="mb-4">
-                  <h3 className="text-lg font-bold text-primary mb-2 flex items-center gap-2">
-                    <span className="material-icons">location_on</span>
+                  <h3 className="text-base sm:text-lg font-bold text-primary mb-2 flex items-center gap-2">
+                    <span className="material-icons text-xl">location_on</span>
                     Ubicación
                   </h3>
                   <p className="text-gray-700 text-sm">
@@ -659,17 +659,17 @@ export default function ContactoPage() {
                 </div>
                 
                 <div className="border-t pt-4">
-                  <h3 className="text-lg font-bold text-primary mb-2 flex items-center gap-2">
-                    <span className="material-icons">schedule</span>
+                  <h3 className="text-base sm:text-lg font-bold text-primary mb-2 flex items-center gap-2">
+                    <span className="material-icons text-xl">schedule</span>
                     Horarios
                   </h3>
                   <div className="space-y-1 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Viernes - Domingo</span>
-                      <span className="font-semibold text-gray-800">15:00 - 20:00</span>
+                    <div className="flex justify-between gap-2">
+                      <span className="text-gray-600">Vie - Dom</span>
+                      <span className="font-semibold text-gray-800 whitespace-nowrap">15:00 - 20:00</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Lunes - Jueves</span>
+                    <div className="flex justify-between gap-2">
+                      <span className="text-gray-600">Lun - Jue</span>
                       <span className="font-semibold text-gray-500">Cerrado</span>
                     </div>
                   </div>
@@ -677,7 +677,7 @@ export default function ContactoPage() {
               </div>
 
               {/* Redes Sociales */}
-              <div className="bg-white rounded-2xl shadow-lg p-6">
+              <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6">
                 <h3 className="text-lg font-bold text-primary mb-3 flex items-center gap-2">
                   <span className="material-icons">share</span>
                   Redes Sociales
@@ -711,7 +711,7 @@ export default function ContactoPage() {
               </div>
 
               {/* Delivery por PedidosYa */}
-              <div className="bg-white rounded-2xl shadow-lg p-6">
+              <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6">
                 <h3 className="text-lg font-bold text-primary mb-3 flex items-center gap-2">
                   <span className="material-icons">delivery_dining</span>
                   Delivery
