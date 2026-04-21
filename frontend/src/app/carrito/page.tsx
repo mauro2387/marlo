@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { useCartStore } from '@/store/cartStore';
@@ -113,12 +114,14 @@ export default function CarritoPage() {
                       )}
                       
                       <div className="flex gap-6">
-                        <div className="w-24 h-24 bg-gradient-to-br from-secondary-crema to-secondary-rosa/20 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
+                        <div className="w-24 h-24 bg-gradient-to-br from-secondary-crema to-secondary-rosa/20 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden relative">
                           {item.imagen?.startsWith('http') || item.imagen?.startsWith('/') ? (
-                            <img 
+                            <Image 
                               src={item.imagen} 
                               alt={item.nombre}
-                              className="w-full h-full object-cover"
+                              fill
+                              sizes="96px"
+                              className="object-cover"
                             />
                           ) : (
                             <span className="text-5xl">{item.categoria === 'boxes' ? '📦' : (item.imagen || '🍪')}</span>

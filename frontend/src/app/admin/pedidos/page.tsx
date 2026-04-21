@@ -72,8 +72,8 @@ const statusLabels: Record<string, { label: string; color: string; icon: string 
 const statusFlowDelivery = ['preparando', 'en_camino', 'entregado'];
 const statusFlowRetiro = ['preparando', 'listo', 'entregado'];
 
-// Intervalo de polling (10 segundos para mejor experiencia)
-const POLLING_INTERVAL = 10000;
+// Intervalo de polling (60s solo como respaldo por si falla realtime)
+const POLLING_INTERVAL = 60000;
 
 export default function AdminPedidosPage() {
   const searchParams = useSearchParams();
@@ -203,8 +203,26 @@ export default function AdminPedidosPage() {
             playNotificationSound();
             setNewOrdersCount(prev => prev + 1);
             
-            // Recargar todos los pedidos para obtener datos completos con joins
-            await fetchOrdersSilent();
+            // En vez de recargar TODOS los pedidos, traer solo el nuevo con sus joins
+            const newOrderId = (payload.new as any).id;
+            if (newOrderId) {
+              try {
+                const { data: fullOrder } = await ordersDB.getById(newOrderId);
+                if (fullOrder) {
+                  setOrders(prev => {
+                    // Evitar duplicados si ya estaba
+                    if (prev.some(o => o.id === fullOrder.id)) return prev;
+                    // Insertar al inicio (más reciente)
+                    const next = [fullOrder as Order, ...prev];
+                    return filter === 'all' ? next : next.filter(o => o.estado === filter);
+                  });
+                  previousOrderIdsRef.current.add(fullOrder.id);
+                  setLastUpdate(new Date());
+                }
+              } catch (e) {
+                console.error('Error cargando nuevo pedido:', e);
+              }
+            }
             
             // Mostrar notificación del navegador
             if ('Notification' in window && Notification.permission === 'granted') {
@@ -222,6 +240,12 @@ export default function AdminPedidosPage() {
               prev.map(o => o.id === updatedOrder.id ? { ...o, ...updatedOrder } : o)
                 .filter(o => filter === 'all' || o.estado === filter)
             );
+          } else if (payload.eventType === 'DELETE') {
+            const deletedId = (payload.old as any)?.id;
+            if (deletedId) {
+              setOrders(prev => prev.filter(o => o.id !== deletedId));
+              previousOrderIdsRef.current.delete(deletedId);
+            }
           }
         }
       )

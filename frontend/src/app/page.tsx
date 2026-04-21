@@ -9,7 +9,7 @@ import PopupModal from '@/components/PopupModal';
 import PromoBannerCarousel from '@/components/PromoBannerCarousel';
 import ScrollAnimation from '@/components/ScrollAnimation';
 import { useEffect, useState } from 'react';
-import { productsService } from '@/services/supabase-api';
+import { productsAPI } from '@/lib/api-optimized';
 import { floatingImagesDB, subscribersDB, featuredCardsDB, popupsDB, siteSettingsDB } from '@/lib/supabase-fetch';
 import { notificationService } from '@/lib/notifications';
 import { isOpenNow, BUSINESS_HOURS, type BusinessHour } from '@/config/constants';
@@ -172,7 +172,7 @@ export default function Home() {
     loadFloatingImages();
   }, []);
 
-  // Cargar horarios desde Supabase
+  // Cargar horarios + Google Reviews desde Supabase (unificado, 1 sola llamada)
   useEffect(() => {
     const loadSiteSettings = async () => {
       try {
@@ -181,49 +181,32 @@ export default function Home() {
           if (data.business_hours) {
             setBusinessHours(data.business_hours);
           }
+          if (data.google_rating || data.google_reviews_count) {
+            setGoogleReviews({
+              rating: data.google_rating || 4.9,
+              count: data.google_reviews_count || 21,
+              url: data.google_reviews_url || googleReviews.url,
+            });
+            return; // ya tenemos reviews de la DB
+          }
         }
+        // Fallback a API si no hay reviews en DB
+        try {
+          const response = await fetch('/api/google-reviews');
+          const apiData = await response.json();
+          if (apiData.rating && apiData.reviews_count) {
+            setGoogleReviews({
+              rating: apiData.rating,
+              count: apiData.reviews_count,
+              url: apiData.url || googleReviews.url,
+            });
+          }
+        } catch {}
       } catch (err) {
         console.log('Usando configuraciones por defecto');
       }
     };
     loadSiteSettings();
-  }, []);
-
-  // Cargar Google Reviews desde la base de datos (valores guardados por el admin)
-  useEffect(() => {
-    const loadGoogleReviews = async () => {
-      try {
-        // Primero intentar cargar desde la base de datos (valores configurados por el admin)
-        const { data: settings } = await siteSettingsDB.get();
-        
-        if (settings && (settings.google_rating || settings.google_reviews_count)) {
-          const reviewsFromDB = {
-            rating: settings.google_rating || 4.9,
-            count: settings.google_reviews_count || 21,
-            url: settings.google_reviews_url || googleReviews.url
-          };
-          
-          setGoogleReviews(reviewsFromDB);
-          console.log('⭐ Google Reviews cargado desde DB:', reviewsFromDB.rating, 'estrellas,', reviewsFromDB.count, 'reseñas');
-          return;
-        }
-        
-        // Si no hay valores en la DB, intentar la API como fallback
-        const response = await fetch('/api/google-reviews');
-        const data = await response.json();
-        if (data.rating && data.reviews_count) {
-          setGoogleReviews({
-            rating: data.rating,
-            count: data.reviews_count,
-            url: data.url || googleReviews.url
-          });
-          console.log('⭐ Google Reviews cargado desde API:', data.rating, 'estrellas,', data.reviews_count, 'reseñas');
-        }
-      } catch (err) {
-        console.log('Usando Google Reviews por defecto');
-      }
-    };
-    loadGoogleReviews();
   }, []);
 
   // Cargar tarjetas destacadas desde Supabase
@@ -249,7 +232,9 @@ export default function Home() {
   useEffect(() => {
     const loadProducts = async () => {
       try {
-        const products: Product[] = await productsService.getAll({ enStock: true });
+        const allProducts = await productsAPI.getAll();
+        // Filtro en cliente para aprovechar cache
+        const products: Product[] = (allProducts as any[]).filter(p => (p.stock ?? 0) > 0) as Product[];
         
         // Eliminar duplicados por nombre + categoría
         const uniqueProducts = new Map<string, Product>();

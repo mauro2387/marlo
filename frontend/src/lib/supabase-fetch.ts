@@ -281,6 +281,17 @@ export const deliveryZonesGeoDB = {
 // ==================== ÓRDENES ====================
 export const ordersDB = {
   getAll: async () => {
+    // Limitado a últimos 90 días y 200 pedidos para reducir egress
+    const ninetyDaysAgo = new Date();
+    ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+    const dateFilter = ninetyDaysAgo.toISOString();
+    return supabaseFetch<any[]>(
+      `orders?select=*,users(nombre,apellido,email,telefono),order_items(*)&created_at=gte.${dateFilter}&order=created_at.desc&limit=200`
+    );
+  },
+
+  // Carga todos los pedidos sin limite (solo para exportar / admin especifico)
+  getAllUnlimited: async () => {
     return supabaseFetch<any[]>('orders?select=*,users(nombre,apellido,email,telefono),order_items(*)&order=created_at.desc');
   },
   
@@ -1004,10 +1015,22 @@ export const storageDB = {
 
 // Alias para compatibilidad
 // ==================== CONFIGURACIÓN DEL SITIO ====================
+// Cache simple en memoria para site_settings (5 min)
+let _siteSettingsCache: { data: any; expiresAt: number } | null = null;
+const SITE_SETTINGS_TTL = 5 * 60 * 1000;
+
 export const siteSettingsDB = {
-  get: async () => {
+  get: async (forceRefresh = false) => {
+    // Devolver cache si es válido
+    if (!forceRefresh && _siteSettingsCache && _siteSettingsCache.expiresAt > Date.now()) {
+      return { data: _siteSettingsCache.data, error: null };
+    }
     const { data, error } = await supabaseFetch<any[]>('site_settings?id=eq.main');
-    return { data: data?.[0] || null, error };
+    const row = data?.[0] || null;
+    if (row) {
+      _siteSettingsCache = { data: row, expiresAt: Date.now() + SITE_SETTINGS_TTL };
+    }
+    return { data: row, error };
   },
   
   update: async (updates: { 
@@ -1030,10 +1053,13 @@ export const siteSettingsDB = {
     delivery_time_limit?: any;
     maintenance_mode?: any;
   }) => {
-    return supabaseFetch<any>('site_settings?id=eq.main', { 
+    const result = await supabaseFetch<any>('site_settings?id=eq.main', { 
       method: 'PATCH', 
       body: { ...updates, updated_at: new Date().toISOString() }
     });
+    // Invalidar cache tras update
+    _siteSettingsCache = null;
+    return result;
   },
 };
 

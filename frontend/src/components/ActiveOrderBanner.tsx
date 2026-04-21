@@ -115,8 +115,8 @@ export default function ActiveOrderBanner() {
     if (isAuthenticated) {
       checkActiveOrders();
       
-      // Polling cada 10 segundos para actualizaciones en tiempo real
-      const interval = setInterval(checkActiveOrders, 10000);
+      // Polling cada 60 segundos (reducido desde 10s para optimizar egress)
+      const interval = setInterval(checkActiveOrders, 60000);
       return () => clearInterval(interval);
     } else {
       setLoading(false);

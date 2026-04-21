@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { popupsDB, subscribersDB } from '@/lib/supabase-fetch';
 
 interface Popup {
@@ -186,11 +187,13 @@ export default function PopupModal({ pagina }: PopupModalProps) {
         
         {/* Imagen */}
         {popup.imagen_url && (
-          <div className="w-full h-48 overflow-hidden">
-            <img 
+          <div className="w-full h-48 overflow-hidden relative">
+            <Image 
               src={popup.imagen_url} 
               alt={popup.titulo}
-              className="w-full h-full object-cover"
+              fill
+              sizes="(max-width: 768px) 100vw, 500px"
+              className="object-cover"
             />
           </div>
         )}

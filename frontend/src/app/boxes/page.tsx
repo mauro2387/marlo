@@ -2,12 +2,13 @@
 
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCartStore } from '@/store/cartStore';
 import { useUIStore } from '@/store/uiStore';
 import { useAuthStore } from '@/store/authStore';
-import { productsDB } from '@/lib/supabase-fetch';
+import { productsAPI } from '@/lib/api-optimized';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import ScrollAnimation from '@/components/ScrollAnimation';
 
@@ -102,9 +103,8 @@ export default function BoxesPage() {
 
   const fetchData = async () => {
     try {
-      // Forzar refresh para tener stock actualizado
-      const { data: allProducts, error } = await productsDB.getAll(true);
-      if (error) throw error;
+      // Usar cache (TTL 5 min) para reducir egress
+      const allProducts = await productsAPI.getAll();
       
       const boxProducts = (allProducts || [])
         .filter((p: any) => p.categoria === 'boxes')
@@ -471,7 +471,7 @@ export default function BoxesPage() {
                     {/* Imagen */}
                     <div className="aspect-[4/5] bg-gradient-to-br from-secondary-crema to-secondary-rosa/20 flex items-center justify-center overflow-hidden relative">
                       {cookie.imagen && (cookie.imagen.startsWith('http') || cookie.imagen.startsWith('/')) ? (
-                        <img src={cookie.imagen} alt={cookie.nombre} className="w-full h-full object-cover" />
+                        <Image src={cookie.imagen} alt={cookie.nombre} fill sizes="(max-width: 640px) 33vw, 20vw" className="object-cover" />
                       ) : (
                         <span className="material-icons text-primary text-4xl sm:text-5xl">cookie</span>
                       )}

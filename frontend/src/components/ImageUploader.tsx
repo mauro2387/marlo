@@ -36,6 +36,56 @@ export default function ImageUploader({
     });
   };
 
+  // Comprimir imagen: redimensiona a max 1200x1200 y convierte a WebP (calidad 0.82)
+  // Reduce el tamaño 5-20x y baja muchísimo el egress de Supabase Storage.
+  const compressImage = async (file: File): Promise<File> => {
+    // Si es GIF, no lo tocamos (para no perder animación)
+    if (file.type === 'image/gif') return file;
+
+    const MAX_DIM = 1200;
+    const QUALITY = 0.82;
+
+    const dataUrl: string = await new Promise((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => resolve(r.result as string);
+      r.onerror = () => reject(new Error('No se pudo leer la imagen'));
+      r.readAsDataURL(file);
+    });
+
+    const img: HTMLImageElement = await new Promise((resolve, reject) => {
+      const i = new Image();
+      i.onload = () => resolve(i);
+      i.onerror = () => reject(new Error('No se pudo decodificar la imagen'));
+      i.src = dataUrl;
+    });
+
+    let { width, height } = img;
+    if (width > MAX_DIM || height > MAX_DIM) {
+      const scale = Math.min(MAX_DIM / width, MAX_DIM / height);
+      width = Math.round(width * scale);
+      height = Math.round(height * scale);
+    }
+
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return file;
+    ctx.drawImage(img, 0, 0, width, height);
+
+    const blob: Blob | null = await new Promise(resolve => {
+      canvas.toBlob(b => resolve(b), 'image/webp', QUALITY);
+    });
+
+    if (!blob) return file;
+
+    // Si comprimido terminó más grande (raro), devolver el original
+    if (blob.size >= file.size) return file;
+
+    const newName = file.name.replace(/\.[^.]+$/, '') + '.webp';
+    return new File([blob], newName, { type: 'image/webp' });
+  };
+
   const processFile = async (file: File) => {
     // Validar tipo
     const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp', 'image/gif'];
@@ -44,7 +94,7 @@ export default function ImageUploader({
       return;
     }
 
-    // Validar tamaño (25MB max)
+    // Validar tamaño (25MB max antes de compresión)
     if (file.size > 25 * 1024 * 1024) {
       setError('La imagen es muy grande. Máximo 25MB.');
       return;
@@ -54,15 +104,24 @@ export default function ImageUploader({
     setUploading(true);
 
     try {
+      // Comprimir en cliente antes de subir para ahorrar egress/storage
+      console.log(`📁 Tamaño original: ${(file.size / 1024).toFixed(1)}KB`);
+      let fileToUpload = file;
+      try {
+        fileToUpload = await compressImage(file);
+        console.log(`🗜️ Tamaño comprimido: ${(fileToUpload.size / 1024).toFixed(1)}KB (${Math.round((1 - fileToUpload.size / file.size) * 100)}% menos)`);
+      } catch (e) {
+        console.warn('No se pudo comprimir, subiendo original:', e);
+      }
+
       // Leer archivo INMEDIATAMENTE en memoria para evitar problemas con OneDrive
-      console.log('📁 Leyendo archivo en memoria...');
-      const arrayBuffer = await readFileAsArrayBuffer(file);
-      
+      const arrayBuffer = await readFileAsArrayBuffer(fileToUpload);
+
       // Crear un nuevo Blob desde el ArrayBuffer (ya en memoria)
-      const blob = new Blob([arrayBuffer], { type: file.type });
-      const fileInMemory = new File([blob], file.name, { type: file.type });
-      
-      console.log(`✅ Archivo leído: ${(fileInMemory.size / 1024).toFixed(1)}KB`);
+      const blob = new Blob([arrayBuffer], { type: fileToUpload.type });
+      const fileInMemory = new File([blob], fileToUpload.name, { type: fileToUpload.type });
+
+      console.log(`✅ Archivo listo para subir: ${(fileInMemory.size / 1024).toFixed(1)}KB`);
 
       // Preview local
       const previewUrl = URL.createObjectURL(blob);

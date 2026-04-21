@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -166,8 +167,8 @@ function ProductosPage() {
 
   async function cargarProductos() {
     try {
-      // Forzar refresh para tener stock actualizado
-      const data = await productsAPI.getAll(true);
+      // Usar cache para reducir egress (TTL de 5 min)
+      const data = await productsAPI.getAll();
       
       // Mapear a formato interno con emojis
       const productosMapeados: Producto[] = data.map((p: any) => ({
@@ -303,9 +304,11 @@ function ProductosPage() {
                     >
                       {bannerSettings.limited_banner_show_images && (
                         p.imagen?.startsWith('http') || p.imagen?.startsWith('/') ? (
-                          <img 
+                          <Image 
                             src={p.imagen} 
                             alt={p.nombre} 
+                            width={24}
+                            height={24}
                             className="w-6 h-6 rounded-full object-cover"
                             onError={(e) => { (e.target as HTMLImageElement).outerHTML = '<span>🍪</span>'; }}
                           />
@@ -498,10 +501,12 @@ function ProductosPage() {
                           }}
                         >
                           {producto.imagen?.startsWith('http') || producto.imagen?.startsWith('/') ? (
-                            <img 
+                            <Image 
                               src={producto.imagen} 
                               alt={producto.nombre}
-                              className="w-full h-full object-cover"
+                              fill
+                              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                              className="object-cover"
                               onError={(e) => {
                                 (e.target as HTMLImageElement).style.display = 'none';
                                 (e.target as HTMLImageElement).parentElement!.innerHTML = '🍪';
@@ -702,10 +707,12 @@ function ProductosPage() {
                     );
                   } else if (productoSeleccionado.imagen?.startsWith('http') || productoSeleccionado.imagen?.startsWith('/')) {
                     return (
-                      <img 
+                      <Image 
                         src={productoSeleccionado.imagen} 
                         alt={productoSeleccionado.nombre}
-                        className="w-full h-full object-cover"
+                        fill
+                        sizes="(max-width: 768px) 100vw, 50vw"
+                        className="object-cover"
                       />
                     );
                   } else {

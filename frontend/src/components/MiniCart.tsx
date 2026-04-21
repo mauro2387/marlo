@@ -3,6 +3,7 @@
 import { useCartStore } from '@/store/cartStore';
 import { useUIStore } from '@/store/uiStore';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useEffect, useState } from 'react';
 
 export default function MiniCart() {
@@ -84,12 +85,14 @@ export default function MiniCart() {
               <div className="space-y-4">
                 {items.map((item) => (
                   <div key={item.id} className="flex gap-4 p-4 bg-gray-50 rounded-xl">
-                    <div className="w-20 h-20 flex-shrink-0 bg-gradient-to-br from-secondary-crema to-secondary-rosa/20 rounded-lg flex items-center justify-center overflow-hidden">
+                    <div className="w-20 h-20 flex-shrink-0 bg-gradient-to-br from-secondary-crema to-secondary-rosa/20 rounded-lg flex items-center justify-center overflow-hidden relative">
                       {item.imagen?.startsWith('http') || item.imagen?.startsWith('/') ? (
-                        <img 
+                        <Image 
                           src={item.imagen} 
                           alt={item.nombre}
-                          className="w-full h-full object-cover"
+                          fill
+                          sizes="80px"
+                          className="object-cover"
                         />
                       ) : (
                         <span className="text-4xl">{item.categoria === 'boxes' ? '📦' : (item.imagen || '🍪')}</span>

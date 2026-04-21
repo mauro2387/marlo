@@ -14,10 +14,15 @@ interface CacheConfig {
 
 // Configuración de caché por tipo de dato
 export const CACHE_CONFIG = {
-  products: { key: 'marlo_products', ttl: 1 * 60 * 1000 }, // 1 minuto (stock cambia frecuentemente)
+  products: { key: 'marlo_products', ttl: 5 * 60 * 1000 }, // 5 minutos (antes 1 min)
   zones: { key: 'marlo_zones', ttl: 30 * 60 * 1000 }, // 30 minutos
   user: { key: 'marlo_user', ttl: 10 * 60 * 1000 }, // 10 minutos
   stats: { key: 'marlo_stats', ttl: 2 * 60 * 1000 }, // 2 minutos
+  siteSettings: { key: 'marlo_site_settings', ttl: 5 * 60 * 1000 }, // 5 minutos
+  floatingImages: { key: 'marlo_floating_images', ttl: 10 * 60 * 1000 }, // 10 minutos
+  featuredCards: { key: 'marlo_featured_cards', ttl: 10 * 60 * 1000 }, // 10 minutos
+  promoBanners: { key: 'marlo_promo_banners', ttl: 5 * 60 * 1000 }, // 5 minutos
+  popups: { key: 'marlo_popups', ttl: 10 * 60 * 1000 }, // 10 minutos
 } as const;
 
 // Caché en memoria para acceso ultra-rápido

@@ -30,6 +30,47 @@ export default function MultiImageUploader({
     });
   };
 
+  // Comprimir imagen a max 1200x1200 WebP para ahorrar egress
+  const compressImage = async (file: File): Promise<File> => {
+    if (file.type === 'image/gif') return file;
+    const MAX_DIM = 1200;
+    const QUALITY = 0.82;
+    try {
+      const dataUrl: string = await new Promise((resolve, reject) => {
+        const r = new FileReader();
+        r.onload = () => resolve(r.result as string);
+        r.onerror = () => reject(new Error('read fail'));
+        r.readAsDataURL(file);
+      });
+      const img: HTMLImageElement = await new Promise((resolve, reject) => {
+        const i = new Image();
+        i.onload = () => resolve(i);
+        i.onerror = () => reject(new Error('decode fail'));
+        i.src = dataUrl;
+      });
+      let { width, height } = img;
+      if (width > MAX_DIM || height > MAX_DIM) {
+        const scale = Math.min(MAX_DIM / width, MAX_DIM / height);
+        width = Math.round(width * scale);
+        height = Math.round(height * scale);
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return file;
+      ctx.drawImage(img, 0, 0, width, height);
+      const blob: Blob | null = await new Promise(resolve => {
+        canvas.toBlob(b => resolve(b), 'image/webp', QUALITY);
+      });
+      if (!blob || blob.size >= file.size) return file;
+      const newName = file.name.replace(/\.[^.]+$/, '') + '.webp';
+      return new File([blob], newName, { type: 'image/webp' });
+    } catch {
+      return file;
+    }
+  };
+
   const uploadImage = async (file: File): Promise<string | null> => {
     try {
       const fileExt = file.name.split('.').pop()?.toLowerCase();
@@ -45,10 +86,13 @@ export default function MultiImageUploader({
         return null;
       }
 
+      // Comprimir antes de subir
+      const compressed = await compressImage(file);
+
       // Leer archivo en memoria primero
-      const arrayBuffer = await readFileAsArrayBuffer(file);
-      const blob = new Blob([arrayBuffer], { type: file.type });
-      const fileInMemory = new File([blob], file.name, { type: file.type });
+      const arrayBuffer = await readFileAsArrayBuffer(compressed);
+      const blob = new Blob([arrayBuffer], { type: compressed.type });
+      const fileInMemory = new File([blob], compressed.name, { type: compressed.type });
 
       // Usar el mismo método que ImageUploader
       const { url, error } = await storageDB.uploadProductImage(fileInMemory, productName || 'product');
