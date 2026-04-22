@@ -281,16 +281,14 @@ export const deliveryZonesGeoDB = {
 // ==================== ÓRDENES ====================
 export const ordersDB = {
   getAll: async () => {
-    // Limitado a últimos 90 días y 200 pedidos para reducir egress
-    const ninetyDaysAgo = new Date();
-    ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
-    const dateFilter = ninetyDaysAgo.toISOString();
+    // Sin límite para mantener visibilidad completa del histórico en admin.
+    // El ahorro real de egress viene de eliminar el polling cada 10s, no de limitar el payload.
     return supabaseFetch<any[]>(
-      `orders?select=*,users(nombre,apellido,email,telefono),order_items(*)&created_at=gte.${dateFilter}&order=created_at.desc&limit=200`
+      'orders?select=*,users(nombre,apellido,email,telefono),order_items(*)&order=created_at.desc'
     );
   },
 
-  // Carga todos los pedidos sin limite (solo para exportar / admin especifico)
+  // Alias por compatibilidad (por si algún código llama getAllUnlimited)
   getAllUnlimited: async () => {
     return supabaseFetch<any[]>('orders?select=*,users(nombre,apellido,email,telefono),order_items(*)&order=created_at.desc');
   },
