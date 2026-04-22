@@ -658,13 +658,25 @@ export default function AdminPedidosPage() {
       ) : orders.length === 0 ? (
         <div className="bg-white rounded-xl shadow-md p-12 text-center">
           <span className="material-icons text-gray-300 mb-4" style={{fontSize: '80px'}}>inbox</span>
-          <h3 className="text-xl font-semibold text-gray-700 mb-2">No hay pedidos</h3>
-          <p className="text-gray-500">
+          <h3 className="text-xl font-semibold text-gray-700 mb-2">No hay pedidos recientes</h3>
+          <p className="text-gray-500 mb-6">
             {filter === 'all' 
-              ? 'Aún no se han recibido pedidos'
-              : `No hay pedidos con estado "${statusLabels[filter]?.label || filter}"`
+              ? 'No hay pedidos de hoy ni de ayer. Hacé click abajo para cargar pedidos anteriores.'
+              : `No hay pedidos recientes con estado "${statusLabels[filter]?.label || filter}".`
             }
           </p>
+          {hasMoreOlder && (
+            <button
+              onClick={loadMoreOrders}
+              disabled={loadingMore}
+              className="px-6 py-3 bg-primary text-white rounded-lg font-semibold hover:bg-primary-dark transition-colors disabled:opacity-50 inline-flex items-center gap-2"
+            >
+              <span className="material-icons text-base">
+                {loadingMore ? 'hourglass_empty' : 'history'}
+              </span>
+              {loadingMore ? 'Cargando...' : 'Cargar pedidos anteriores (30 días)'}
+            </button>
+          )}
         </div>
       ) : (
         <div className="space-y-4">
