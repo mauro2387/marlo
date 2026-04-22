@@ -62,7 +62,7 @@ export default function AdminDashboard() {
       try {
         const [statsResult, ordersResult] = await Promise.all([
           statsDB.get(),
-          ordersDB.getAll(),
+          ordersDB.getRecent(2), // solo hoy + ayer (dashboard muestra top 5)
         ]);
 
         if (statsResult.data) {

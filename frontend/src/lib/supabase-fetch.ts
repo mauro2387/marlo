@@ -288,7 +288,30 @@ export const ordersDB = {
     );
   },
 
-  // Alias por compatibilidad (por si algún código llama getAllUnlimited)
+  // Carga pedidos desde las últimas N dias (defecto: 2 = hoy + ayer).
+  // Uso típico: admin carga 2 días al entrar y amplía con "Cargar más".
+  getRecent: async (days: number = 2) => {
+    const since = new Date();
+    since.setHours(0, 0, 0, 0); // inicio del día
+    since.setDate(since.getDate() - (days - 1)); // si days=2: desde ayer 00:00
+    const dateFilter = since.toISOString();
+    return supabaseFetch<any[]>(
+      `orders?select=*,users(nombre,apellido,email,telefono),order_items(*)&created_at=gte.${dateFilter}&order=created_at.desc`
+    );
+  },
+
+  // Carga pedidos anteriores a una fecha (para paginación "Cargar más").
+  // before: ISO string; days: cuantos días hacia atrás desde `before`.
+  getOlderThan: async (beforeISO: string, days: number = 30) => {
+    const end = new Date(beforeISO);
+    const start = new Date(end);
+    start.setDate(start.getDate() - days);
+    return supabaseFetch<any[]>(
+      `orders?select=*,users(nombre,apellido,email,telefono),order_items(*)&created_at=gte.${start.toISOString()}&created_at=lt.${end.toISOString()}&order=created_at.desc`
+    );
+  },
+
+  // Alias por compatibilidad
   getAllUnlimited: async () => {
     return supabaseFetch<any[]>('orders?select=*,users(nombre,apellido,email,telefono),order_items(*)&order=created_at.desc');
   },

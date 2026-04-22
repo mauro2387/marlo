@@ -88,6 +88,10 @@ export default function AdminPedidosPage() {
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [audioUnlocked, setAudioUnlocked] = useState(false);
   const [realtimeConnected, setRealtimeConnected] = useState(false);
+  // Paginación: pedidos cargados hasta fecha X (ISO string). Inicial = hoy 00:00 - 2 días.
+  const [oldestLoadedDate, setOldestLoadedDate] = useState<string | null>(null);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMoreOlder, setHasMoreOlder] = useState(true);
   
   const audioContextRef = useRef<AudioContext | null>(null);
   const previousOrderIdsRef = useRef<Set<string>>(new Set());
@@ -278,10 +282,20 @@ export default function AdminPedidosPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filter]);
 
-  // Fetch silencioso para polling
+  // Fetch silencioso para polling (refresca solo el rango ya cargado)
   const fetchOrdersSilent = async () => {
     try {
-      const { data, error } = await ordersDB.getAll();
+      // Calcular días desde la fecha más vieja cargada hasta hoy
+      let result;
+      if (oldestLoadedDate) {
+        const oldest = new Date(oldestLoadedDate);
+        const now = new Date();
+        const daysDiff = Math.ceil((now.getTime() - oldest.getTime()) / (1000 * 60 * 60 * 24));
+        result = await ordersDB.getRecent(Math.max(daysDiff, 2));
+      } else {
+        result = await ordersDB.getRecent(2);
+      }
+      const { data, error } = result;
       if (error) throw error;
       
       let filtered = data || [];
@@ -318,7 +332,9 @@ export default function AdminPedidosPage() {
     setLoading(true);
     setNewOrdersCount(0);
     try {
-      const { data, error } = await ordersDB.getAll();
+      // Cargar solo hoy + ayer por defecto (ahorro de egress).
+      // El botón "Cargar más antiguos" extiende el rango bajo demanda.
+      const { data, error } = await ordersDB.getRecent(2);
       if (error) throw error;
       
       let filtered = data || [];
@@ -329,6 +345,13 @@ export default function AdminPedidosPage() {
       // Guardar IDs actuales para comparar en polling
       previousOrderIdsRef.current = new Set(filtered.map((o: any) => o.id));
       
+      // Marcar la fecha de corte (inicio de ayer) para paginación
+      const since = new Date();
+      since.setHours(0, 0, 0, 0);
+      since.setDate(since.getDate() - 1);
+      setOldestLoadedDate(since.toISOString());
+      setHasMoreOlder(true);
+      
       setOrders(filtered);
       setLastUpdate(new Date());
     } catch (err) {
@@ -336,6 +359,42 @@ export default function AdminPedidosPage() {
       setOrders([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Carga pedidos más antiguos (botón "Cargar más") — trae 30 días extra cada click
+  const loadMoreOrders = async () => {
+    if (!oldestLoadedDate || loadingMore) return;
+    setLoadingMore(true);
+    try {
+      const { data, error } = await ordersDB.getOlderThan(oldestLoadedDate, 30);
+      if (error) throw error;
+      const older = data || [];
+      
+      if (older.length === 0) {
+        setHasMoreOlder(false);
+      } else {
+        const olderFiltered = filter === 'all'
+          ? older
+          : older.filter((o: any) => o.estado === filter);
+        
+        setOrders(prev => {
+          // Evitar duplicados por id
+          const existingIds = new Set(prev.map(p => p.id));
+          const merged = [...prev, ...olderFiltered.filter((o: any) => !existingIds.has(o.id))];
+          return merged;
+        });
+        olderFiltered.forEach((o: any) => previousOrderIdsRef.current.add(o.id));
+        
+        // Retroceder la fecha de corte 30 días
+        const newOldest = new Date(oldestLoadedDate);
+        newOldest.setDate(newOldest.getDate() - 30);
+        setOldestLoadedDate(newOldest.toISOString());
+      }
+    } catch (err) {
+      console.error('Error cargando pedidos antiguos:', err);
+    } finally {
+      setLoadingMore(false);
     }
   };
 
@@ -907,6 +966,27 @@ export default function AdminPedidosPage() {
             </div>
             );
           })}
+
+          {/* Botón "Cargar más antiguos" — paginación por fecha para ahorrar egress */}
+          {hasMoreOlder && (
+            <div className="flex justify-center py-6">
+              <button
+                onClick={loadMoreOrders}
+                disabled={loadingMore}
+                className="px-6 py-3 bg-primary text-white rounded-lg font-semibold hover:bg-primary-dark transition-colors disabled:opacity-50 flex items-center gap-2"
+              >
+                <span className="material-icons text-base">
+                  {loadingMore ? 'hourglass_empty' : 'history'}
+                </span>
+                {loadingMore ? 'Cargando...' : 'Cargar pedidos más antiguos (30 días más)'}
+              </button>
+            </div>
+          )}
+          {!hasMoreOlder && orders.length > 0 && (
+            <p className="text-center text-gray-500 text-sm py-4">
+              No hay más pedidos antiguos para cargar.
+            </p>
+          )}
         </div>
       )}
     </div>
